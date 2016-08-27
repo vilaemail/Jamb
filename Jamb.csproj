@@ -53,6 +53,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -64,6 +65,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\ArgumentValidation.cs" />
+    <Compile Include="Common\ExceptionHandling.cs" />
+    <Compile Include="Common\TaskHelper.cs" />
+    <Compile Include="Communication\CommunicationException.cs" />
+    <Compile Include="Communication\MessagePasser.cs" />
+    <Compile Include="Communication\ProtocolException.cs" />
+    <Compile Include="Communication\UnknownCommunicationException.cs" />
+    <Compile Include="Communication\WireProtocol\Message.cs" />
     <Compile Include="Menu.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -106,6 +115,9 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Model\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

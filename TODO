@@ -1,0 +1,6 @@
+This file contains a TODO list for project evolution.
+
+* Implement tests in unit test classes that are created in test project
+* Test and refine code enabling MessagePasser to work
+* Write tests for remaining code
+* Write integration test that will test MessagePasser works as expected using a loopback connection

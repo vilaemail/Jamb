@@ -67,8 +67,15 @@
   <ItemGroup>
     <Compile Include="Common\ArgumentValidation.cs" />
     <Compile Include="Common\ExceptionHandling.cs" />
+    <Compile Include="Common\NetworkHelper.cs" />
     <Compile Include="Common\TaskHelper.cs" />
     <Compile Include="Communication\CommunicationException.cs" />
+    <Compile Include="Communication\NetworkStreamFactory.cs" />
+    <Compile Include="Communication\MalformedMessageException.cs" />
+    <Compile Include="Communication\TimeoutException.cs" />
+    <Compile Include="Communication\WireProtocol\UnitTestMessage.cs" />
+    <Compile Include="Communication\WrappedNetworkStream.cs" />
+    <Compile Include="Communication\INetworkStream.cs" />
     <Compile Include="Communication\MessagePasser.cs" />
     <Compile Include="Communication\ProtocolException.cs" />
     <Compile Include="Communication\UnknownCommunicationException.cs" />
@@ -117,7 +124,9 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Logging\" />
     <Folder Include="Model\" />
+    <Folder Include="Settings\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

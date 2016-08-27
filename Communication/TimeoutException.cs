@@ -6,20 +6,20 @@ using System.Threading.Tasks;
 
 namespace Jamb.Communication
 {
-    public class TimeoutException : CommunicationException
-    {
-        public TimeoutException()
-        {
-        }
+	public class TimeoutException : CommunicationException
+	{
+		public TimeoutException()
+		{
+		}
 
-        public TimeoutException(string message)
-            : base(message)
-        {
-        }
+		public TimeoutException(string message)
+			: base(message)
+		{
+		}
 
-        public TimeoutException(string message, Exception inner)
-            : base(message, inner)
-        {
-        }
-    }
+		public TimeoutException(string message, Exception inner)
+			: base(message, inner)
+		{
+		}
+	}
 }

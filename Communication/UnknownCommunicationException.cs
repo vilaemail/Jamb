@@ -6,20 +6,20 @@ using System.Threading.Tasks;
 
 namespace Jamb.Communication
 {
-    public class UnknownCommunicationException : CommunicationException
-    {
-        public UnknownCommunicationException()
-        {
-        }
+	public class UnknownCommunicationException : CommunicationException
+	{
+		public UnknownCommunicationException()
+		{
+		}
 
-        public UnknownCommunicationException(string message)
-            : base(message)
-        {
-        }
+		public UnknownCommunicationException(string message)
+			: base(message)
+		{
+		}
 
-        public UnknownCommunicationException(string message, Exception inner)
-            : base(message, inner)
-        {
-        }
-    }
+		public UnknownCommunicationException(string message, Exception inner)
+			: base(message, inner)
+		{
+		}
+	}
 }

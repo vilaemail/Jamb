@@ -1,4 +1,4 @@
 This file contains a TODO list for project evolution.
 
 * Add logging mechanism to the codebase
-* Add settings and resources mechanism to the codebase. Both of which esentially represent a value that should be available at some point. It should be behind IValueProvider interface that can have multiple implementations, e.g. for settings it could query our settings and possibly cache the result. For resources it could query our resources and possibly cache them. For settings that are not in our settings system (yet) we could just have a concrete implementation that returns a value given at construction time.
+* Add settings mechanism and replace all constants with unified approach

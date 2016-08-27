@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Jamb.Communication
 {
+	[Serializable]
 	public class TimeoutException : CommunicationException
 	{
 		public TimeoutException()

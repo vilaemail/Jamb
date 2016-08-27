@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Jamb.Communication
 {
+	[Serializable]
 	public class CommunicationException : Exception
 	{
 		public CommunicationException()

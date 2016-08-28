@@ -46,7 +46,11 @@ Architecture is yet to be described here.
 7. Avoid stating the obvious in comments e.g. "Default constructor".
 8. Constructor should never fail unless input argument is not within expected bounds. That is constructor should validate arguments and avoid doing anything that could fail.
 
-Remaining is TBD. Will use same style throughout project so it should be easy to mimic the existing style used.
+## Coding style convention
+
+1. Code should be indented using tabs.
+2. Curly braces should always be placed on a line of its own.
+3. Remaining is TBD. Will use same style throughout project so it should be easy to mimic the existing style used.
 
 ## If you want to contribute
 

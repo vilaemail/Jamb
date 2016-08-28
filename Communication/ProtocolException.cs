@@ -6,20 +6,20 @@ using System.Threading.Tasks;
 
 namespace Jamb.Communication
 {
-    public class ProtocolException : CommunicationException
-    {
-        public ProtocolException()
-        {
-        }
+	public class ProtocolException : CommunicationException
+	{
+		public ProtocolException()
+		{
+		}
 
-        public ProtocolException(string message)
-            : base(message)
-        {
-        }
+		public ProtocolException(string message)
+			: base(message)
+		{
+		}
 
-        public ProtocolException(string message, Exception inner)
-            : base(message, inner)
-        {
-        }
-    }
+		public ProtocolException(string message, Exception inner)
+			: base(message, inner)
+		{
+		}
+	}
 }

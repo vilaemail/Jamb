@@ -1,5 +1,4 @@
 This file contains a TODO list for project evolution.
 
-* Write integration test that will test MessagePasser works as expected using a loopback connection
 * Conform all code to the conventions and principles.
 * Add logging mechanism to the codebase

@@ -33,7 +33,7 @@ namespace JambTests.Communication
 			Mock<INetworkStream> mockStream = new Mock<INetworkStream>(MockBehavior.Strict);
 			mockStream.Setup(obj => obj.Write(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>())).Throws(new ApplicationException("Unit test exception"));
 			MessagePasser underTest = new MessagePasser(mockStream.Object);
-			
+
 			AssertHelper.AssertExceptionHappened(() => underTest.SendMessage(CreateNormalMessage(10), new CancellationToken()), typeof(UnknownCommunicationException), "We should throw on unexpected exception");
 		}
 
@@ -237,7 +237,7 @@ namespace JambTests.Communication
 			return mockStream;
 		}
 
-		private static UnitTestMessage CreateNormalMessage(int id = 0)
+		internal static UnitTestMessage CreateNormalMessage(int id = 0)
 		{
 			return new UnitTestMessage()
 			{
@@ -246,6 +246,18 @@ namespace JambTests.Communication
 				ListDataMember = new List<string> { "abc", "xyz" + id },
 				StringDataMember = "str" + id,
 				CustomObjectDataMember = null
+			};
+		}
+
+		internal static UnitTestMessage CreateNestedMessage(int id = 0)
+		{
+			return new UnitTestMessage()
+			{
+				IntDataMember = 5 + id,
+				IntNonDataMemeber = 10,
+				ListDataMember = new List<string> { "abc", "xyz" + id },
+				StringDataMember = "str" + id,
+				CustomObjectDataMember = new UnitTestMessage.NestedUnitTestDataContract() {IntDataMember = id * 2}
 			};
 		}
 
@@ -266,7 +278,7 @@ namespace JambTests.Communication
 			}
 		}
 
-		private static void AssertNormalMessage(UnitTestMessage message, int expectedId)
+		internal static void AssertNormalMessage(UnitTestMessage message, int expectedId)
 		{
 			UnitTestMessage expectedMessage = CreateNormalMessage(expectedId);
 
@@ -275,6 +287,18 @@ namespace JambTests.Communication
 			Assert.AreEqual(expectedMessage.ListDataMember[1], message.ListDataMember[1], "List data memeber should be the same. Item 1");
 			Assert.AreEqual(expectedMessage.StringDataMember, message.StringDataMember, "String data memeber should be the same");
 			Assert.AreEqual(expectedMessage.CustomObjectDataMember, message.CustomObjectDataMember, "CustomObject data memeber should be the same");
+			Assert.AreEqual(0, message.IntNonDataMemeber, "Int that is not data memeber should not be the same");
+		}
+
+		internal static void AssertNestedMessage(UnitTestMessage message, int expectedId)
+		{
+			UnitTestMessage expectedMessage = CreateNestedMessage(expectedId);
+
+			Assert.AreEqual(expectedMessage.IntDataMember, message.IntDataMember, "Int data memeber should be the same");
+			Assert.AreEqual(expectedMessage.ListDataMember[0], message.ListDataMember[0], "List data memeber should be the same. Item 0");
+			Assert.AreEqual(expectedMessage.ListDataMember[1], message.ListDataMember[1], "List data memeber should be the same. Item 1");
+			Assert.AreEqual(expectedMessage.StringDataMember, message.StringDataMember, "String data memeber should be the same");
+			Assert.AreEqual(expectedMessage.CustomObjectDataMember.IntDataMember, message.CustomObjectDataMember.IntDataMember, "CustomObject data memeber should be the same");
 			Assert.AreEqual(0, message.IntNonDataMemeber, "Int that is not data memeber should not be the same");
 		}
 

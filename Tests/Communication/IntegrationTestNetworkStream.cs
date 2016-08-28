@@ -162,7 +162,7 @@ namespace JambTests.Communication
 			}
 		}
 
-		private static Tuple<INetworkStream, INetworkStream> GetServerAndClientStream()
+		internal static Tuple<INetworkStream, INetworkStream> GetServerAndClientStream()
 		{
 			// Make sure all our blocking actions finish eventually
 			CancellationTokenSource cts = new CancellationTokenSource();

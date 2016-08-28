@@ -64,6 +64,7 @@
     <Compile Include="Common\UnitTestArgumentValidation.cs" />
     <Compile Include="Common\UnitTestExceptionHandling.cs" />
     <Compile Include="Common\UnitTestTaskHelper.cs" />
+    <Compile Include="Communication\IntegrationTestMessagePasser.cs" />
     <Compile Include="Communication\IntegrationTestNetworkStream.cs" />
     <Compile Include="Communication\UnitTestMessagePasser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

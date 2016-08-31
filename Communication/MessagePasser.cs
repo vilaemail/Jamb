@@ -49,16 +49,7 @@ namespace Jamb.Communication
 
 			try
 			{
-				// Make serializer
-				DataContractJsonSerializer serializer = CreateSerializer();
-				byte[] dataToBeSent;
-				// Serialize data
-				using (MemoryStream memoryStream = new MemoryStream())
-				{
-					serializer.WriteObject(memoryStream, messageToSend);
-					dataToBeSent = memoryStream.ToArray();
-				}
-				// Send the data
+				byte[] dataToBeSent = SerializeMessage(messageToSend);
 				SendBytes(dataToBeSent, cancelToken);
 			}
 			catch (Exception e) when (!(e is CommunicationException || e is TaskCanceledException)) // Only wrap unexpected exceptions
@@ -77,16 +68,7 @@ namespace Jamb.Communication
 			{
 				// Get bytes from the stream
 				byte[] receivedData = ReceiveBytes(cancelToken);
-				// Make deserializer
-				DataContractJsonSerializer serializer = CreateSerializer();
-				Message receivedMessage;
-				// Deserialize message
-				using (MemoryStream memoryStream = new MemoryStream(receivedData))
-				{
-					receivedMessage = (Message)serializer.ReadObject(memoryStream);
-				}
-				// Return the resulting object
-				return receivedMessage;
+				return DeserializeMessage(receivedData);
 			}
 			catch (IOException e) when (e.InnerException != null && e.InnerException.GetType() == typeof(SocketException) && e.InnerException.Message.Contains(c_readTimeoutMessage))
 			{
@@ -104,6 +86,33 @@ namespace Jamb.Communication
 		}
 
 		/// <summary>
+		/// Serializes given message to byte array.
+		/// </summary>
+		private static byte[] SerializeMessage(Message message)
+		{
+			DataContractJsonSerializer serializer = CreateSerializer();
+			// Serialize message to byte array
+			using (MemoryStream memoryStream = new MemoryStream())
+			{
+				serializer.WriteObject(memoryStream, message);
+				return memoryStream.ToArray();
+			}
+		}
+
+		/// <summary>
+		/// Deserializes given byte array to message.
+		/// </summary>
+		private Message DeserializeMessage(byte[] data)
+		{
+			DataContractJsonSerializer serializer = CreateSerializer();
+			// Deserialize message
+			using (MemoryStream memoryStream = new MemoryStream(data))
+			{
+				return (Message)serializer.ReadObject(memoryStream);
+			}
+		}
+
+		/// <summary>
 		/// Sends provided bytes over the stream.
 		/// </summary>
 		private void SendBytes(byte[] bytesToSend, CancellationToken cancelToken)
@@ -114,14 +123,8 @@ namespace Jamb.Communication
 			{
 				throw new ProtocolException("Size of message to be sent is larger than the maximum.");
 			}
-			// Construct the message header
-			Debug.Assert(c_headerSize == 5);
-			byte[] messageHeader = new byte[c_headerSize];
-			messageHeader[0] = (byte)(bytesToSend.Length / (256 * 256 * 256));
-			messageHeader[1] = (byte)((bytesToSend.Length / (256 * 256)) % 256);
-			messageHeader[2] = (byte)((bytesToSend.Length / (256)) % 256);
-			messageHeader[3] = (byte)((bytesToSend.Length / (1)) % 256);
-			messageHeader[4] = c_protocolVersion;
+
+			byte[] messageHeader = ConstructMessageHeader(bytesToSend);
 			// Send the bytes
 			m_stream.Write(messageHeader, 0, messageHeader.Length);
 			ThrowIfWeShouldCancel(cancelToken, "Cancelation request detected in SendBytes.");
@@ -129,29 +132,52 @@ namespace Jamb.Communication
 		}
 
 		/// <summary>
+		/// Creates header to be sent before the actual payload
+		/// </summary>
+		private static byte[] ConstructMessageHeader(byte[] bytesToSend)
+		{
+			Debug.Assert(c_headerSize == 5);
+			byte[] messageHeader = new byte[c_headerSize];
+			messageHeader[0] = (byte)(bytesToSend.Length / (256 * 256 * 256));
+			messageHeader[1] = (byte)((bytesToSend.Length / (256 * 256)) % 256);
+			messageHeader[2] = (byte)((bytesToSend.Length / (256)) % 256);
+			messageHeader[3] = (byte)((bytesToSend.Length / (1)) % 256);
+			messageHeader[4] = c_protocolVersion;
+			return messageHeader;
+		}
+
+		/// <summary>
 		/// Receives bytes from the stream
 		/// </summary>
 		private byte[] ReceiveBytes(CancellationToken cancelToken)
 		{
-			// Read the message header
+			// Receive header and process it
 			byte[] messageHeader = ReadBytesFromStream(c_headerSize, cancelToken);
-			// Extract message size and protocol version from the header
-			Debug.Assert(c_headerSize == 5);
-			int messageSize = messageHeader[0] * 256 * 256 * 256 + messageHeader[1] * 256 * 256 + messageHeader[2] * 256 + messageHeader[3];
-			byte protocolVersion = messageHeader[4];
-			// Make sure we support the protocol
-			if (protocolVersion != c_protocolVersion)
-			{
-				throw new ProtocolException("Unsupported protocol version. Our version: " + c_protocolVersion + ". Received message version: " + protocolVersion);
-			}
-			// Make sure message size is acceptable
+			int messageSize = UnpackAndValidateMessageHeader(messageHeader);
 			if (messageSize > c_maxMessageSize)
 			{
 				throw new ProtocolException("Message to be received is too large.");
 			}
-			// Receive the message
+			// Receive the message (payload)
 			byte[] message = ReadBytesFromStream(messageSize, cancelToken);
 			return message;
+		}
+
+		/// <summary>
+		/// Unpacks the header, validates it and returns the payload size.
+		/// </summary>
+		private static int UnpackAndValidateMessageHeader(byte[] messageHeader)
+		{
+			Debug.Assert(c_headerSize == 5);
+			int messageSize = messageHeader[0] * 256 * 256 * 256 + messageHeader[1] * 256 * 256 + messageHeader[2] * 256 + messageHeader[3];
+
+			byte protocolVersion = messageHeader[4];
+			if (protocolVersion != c_protocolVersion)
+			{
+				throw new ProtocolException("Unsupported protocol version. Our version: " + c_protocolVersion + ". Received message version: " + protocolVersion);
+			}
+
+			return messageSize;
 		}
 
 		/// <summary>
@@ -167,8 +193,10 @@ namespace Jamb.Communication
 			byte[] buffer = new byte[numberOfBytes];
 			// Read from the stream
 			int offset = 0;
-			while (offset < numberOfBytes && !cancelToken.IsCancellationRequested)
+			while (offset < numberOfBytes)
 			{
+				// Test if we want to cancel
+				ThrowIfWeShouldCancel(cancelToken, "Cancelation request detected in ReadBytesFromStream.");
 				// If there is no data backoff for some time
 				if (!m_stream.DataAvailable)
 				{
@@ -179,8 +207,7 @@ namespace Jamb.Communication
 				int justRead = m_stream.Read(buffer, offset, numberOfBytes - offset);
 				offset += justRead;
 			}
-			// Test if we want to cancel
-			ThrowIfWeShouldCancel(cancelToken, "Cancelation request detected in ReadBytesFromStream.");
+			
 			// Return received data
 			return buffer;
 		}

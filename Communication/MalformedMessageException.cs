@@ -1,24 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Jamb.Communication
 {
 	[Serializable]
 	public class MalformedMessageException : CommunicationException
 	{
-		public MalformedMessageException()
+		internal MalformedMessageException()
 		{
 		}
 
-		public MalformedMessageException(string message)
+		internal MalformedMessageException(string message)
 			: base(message)
 		{
 		}
 
-		public MalformedMessageException(string message, Exception inner)
+		internal MalformedMessageException(string message, Exception inner)
 			: base(message, inner)
 		{
 		}

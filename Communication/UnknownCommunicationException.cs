@@ -1,24 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Jamb.Communication
 {
 	[Serializable]
 	public class UnknownCommunicationException : CommunicationException
 	{
-		public UnknownCommunicationException()
+		internal UnknownCommunicationException()
 		{
 		}
 
-		public UnknownCommunicationException(string message)
+		internal UnknownCommunicationException(string message)
 			: base(message)
 		{
 		}
 
-		public UnknownCommunicationException(string message, Exception inner)
+		internal UnknownCommunicationException(string message, Exception inner)
 			: base(message, inner)
 		{
 		}

@@ -6,7 +6,7 @@ namespace Jamb.Communication
 	/// <summary>
 	/// Calls the underlying implementation of NetworkStream.
 	/// </summary>
-	class WrappedNetworkStream : INetworkStream
+	internal class WrappedNetworkStream : INetworkStream
 	{
 		private NetworkStream m_networkStream;
 		public WrappedNetworkStream(NetworkStream stream)

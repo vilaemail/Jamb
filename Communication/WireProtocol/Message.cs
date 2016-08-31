@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Jamb.Communication.WireProtocol
 {
 	[DataContract]
-	abstract class Message
+	internal abstract class Message
 	{
 		public static IEnumerable<Type> KnownTypes { get; private set; }
 		static Message()

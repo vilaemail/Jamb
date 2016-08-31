@@ -1,24 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Jamb.Communication
 {
 	[Serializable]
 	public class ProtocolException : CommunicationException
 	{
-		public ProtocolException()
+		internal ProtocolException()
 		{
 		}
 
-		public ProtocolException(string message)
+		internal ProtocolException(string message)
 			: base(message)
 		{
 		}
 
-		public ProtocolException(string message, Exception inner)
+		internal ProtocolException(string message, Exception inner)
 			: base(message, inner)
 		{
 		}

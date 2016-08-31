@@ -43,13 +43,13 @@ namespace JambTests.Communication
 			SendMessage_NormalMessageWithSpecifiedNetworkDelay_MessageWrittenToStreamAsExpected(0);
 		}
 
-		[TestMethod]
+		[TestCategory("Longrunning"), TestMethod]
 		public void SendMessage_NormalMessageWithNetworkDelays_MessageWrittenToStreamAsExpected()
 		{
 			SendMessage_NormalMessageWithSpecifiedNetworkDelay_MessageWrittenToStreamAsExpected(100);
 		}
 
-		[TestMethod]
+		[TestCategory("Longrunning"), TestMethod]
 		public void SendMessage_NormalMessageWithCancelationRequested_CancelationExceptionThrown()
 		{
 			int expectedSize = 5;
@@ -170,7 +170,7 @@ namespace JambTests.Communication
 			AssertNormalMessage(recivedMessage, 10);
 		}
 
-		[TestMethod]
+		[TestCategory("Longrunning"), TestMethod]
 		public void ReceiveMessage_NormalMessageWithCancelationRequested_CancelationExceptionThrown()
 		{
 			byte[] message = (byte[])s_normalMessage.Clone();
@@ -185,7 +185,7 @@ namespace JambTests.Communication
 			Assert.AreEqual(message.Length - 5, readBuffer.RemainingBytes, "We should have read only header");
 		}
 
-		[TestMethod]
+		[TestCategory("Longrunning"), TestMethod]
 		public void ReceiveMessage_NormalMessageWhenSomeBytesAreLate_MessageIsReceivedAsExpected()
 		{
 			// Set up test in such a way that we don't send whole message when read method is called

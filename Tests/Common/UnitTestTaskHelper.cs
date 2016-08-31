@@ -10,7 +10,7 @@ namespace JambTests.Common
 	[TestClass]
 	public class UnitTestTaskHelper
 	{
-		[TestMethod]
+		[TestCategory("Longrunning"), TestMethod]
 		public void WaitAndThrowActualException_NoReturnValue_ReturnsWhenTaskIsFinished()
 		{
 			// Dummy variable containing a value
@@ -20,7 +20,7 @@ namespace JambTests.Common
 			Task.Run(() =>
 			{
 				// Wait for some time
-				System.Threading.Thread.Sleep(500);
+				System.Threading.Thread.Sleep(100);
 				Assert.AreEqual(0, i, "Task should be the first to change this value");
 				// Change the value
 				i = 1;
@@ -31,7 +31,7 @@ namespace JambTests.Common
 			i = 2;
 		}
 
-		[TestMethod]
+		[TestCategory("Longrunning"), TestMethod]
 		public void WaitAndThrowActualException_WithReturnValue_ReturnsWhenTaskIsFinishedAndTheTasksResult()
 		{
 			// Dummy variable containing a value
@@ -42,7 +42,7 @@ namespace JambTests.Common
 			List<int> returned = Task.Run(() =>
 			{
 				// Wait for some time
-				System.Threading.Thread.Sleep(500);
+				System.Threading.Thread.Sleep(100);
 				Assert.AreEqual(0, i, "Task should be the first to change this value");
 				// Change the value
 				i = 1;

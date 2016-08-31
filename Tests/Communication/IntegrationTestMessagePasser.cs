@@ -25,7 +25,7 @@ namespace JambTests.Communication
 	[TestClass]
 	public class ComponentTestMessagePasser
 	{
-		[TestMethod]
+		[TestCategory("Integration"), TestCategory("Longrunning"), TestMethod]
 		public void BasicServerClient_ServerAndClientExchangeOneMessageAndCloseConnection_MessagesIntactGracefullExit()
 		{
 			// Make sure all our blocking actions finish eventually
@@ -52,7 +52,7 @@ namespace JambTests.Communication
 			}
 		}
 
-		[TestMethod]
+		[TestCategory("Integration"), TestCategory("Longrunning"), TestMethod]
 		public void BasicServerClient_ClientWaitsForMessageAndServerSendsIt_MessagesIntactGracefullExit()
 		{
 			// Make sure all our blocking actions finish eventually
@@ -82,7 +82,7 @@ namespace JambTests.Communication
 			}
 		}
 
-		[TestMethod]
+		[TestCategory("Integration"), TestCategory("Longrunning"), TestMethod]
 		public void StressServerClient_ClientAndServerBothSendALotOfMessagesInParallel_MessagesIntactGracefullExit()
 		{
 			// Make sure all our blocking actions finish eventually

@@ -28,7 +28,7 @@ namespace JambTests.Communication
 	{
 		private static readonly byte[] dummyMessage = { 1, 2, 3, 4, 5 };
 
-		[TestMethod]
+		[TestCategory("Integration"), TestCategory("Longrunning"), TestMethod]
 		public void BasicServerClient_ServerAndClientExchangeOneMessageAndCloseConnection_MessagesIntactGracefullExit()
 		{
 			byte[] buffer = new byte[100];
@@ -92,7 +92,7 @@ namespace JambTests.Communication
 			}
 		}
 
-		[TestMethod]
+		[TestCategory("Integration"), TestCategory("Longrunning"), TestMethod]
 		public void BasicServerClient_ConnectionIsTerminatedFromOneEnd_HandlesGracefully()
 		{
 			int readBytes;
@@ -135,7 +135,7 @@ namespace JambTests.Communication
 			}
 		}
 
-		[TestMethod]
+		[TestCategory("Integration"), TestCategory("Longrunning"), TestMethod]
 		public void BasicServerClient_ReadAndWriteTimeout_ThrowsException()
 		{
 			byte[] buffer = new byte[100];

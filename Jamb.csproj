@@ -80,6 +80,17 @@
     <Compile Include="Communication\ProtocolException.cs" />
     <Compile Include="Communication\UnknownCommunicationException.cs" />
     <Compile Include="Communication\WireProtocol\Message.cs" />
+    <Compile Include="Logging\AsyncToFileLogConsumer.cs" />
+    <Compile Include="Logging\DefaultLogFormatter.cs" />
+    <Compile Include="Logging\ILogConsumer.cs" />
+    <Compile Include="Logging\ILogFormatter.cs" />
+    <Compile Include="Logging\DefaultLogger.cs" />
+    <Compile Include="Logging\ILogger.cs" />
+    <Compile Include="Logging\LogData.cs" />
+    <Compile Include="Logging\LogFileCreationException.cs" />
+    <Compile Include="Logging\Logger.cs" />
+    <Compile Include="Logging\LoggerFactory.cs" />
+    <Compile Include="Logging\LogLevel.cs" />
     <Compile Include="Menu.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -124,7 +135,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Logging\" />
     <Folder Include="Model\" />
     <Folder Include="Settings\" />
   </ItemGroup>

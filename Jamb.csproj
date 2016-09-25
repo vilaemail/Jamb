@@ -91,6 +91,7 @@
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Logging\LoggerFactory.cs" />
     <Compile Include="Logging\LogLevel.cs" />
+    <Compile Include="Logging\NullLoggerThatEvaluatesLogData.cs" />
     <Compile Include="Logging\NullLogger.cs" />
     <Compile Include="Menu.cs">
       <SubType>Form</SubType>
@@ -111,6 +112,9 @@
     <Compile Include="Values\SettingsKey.cs" />
     <Compile Include="Values\Settings.cs" />
     <Compile Include="Values\ValuesException.cs" />
+    <EmbeddedResource Include="Menu.resx">
+      <DependentUpon>Menu.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

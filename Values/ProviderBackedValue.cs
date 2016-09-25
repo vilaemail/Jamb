@@ -21,6 +21,10 @@ namespace Jamb.Values
 			{
 				throw new ArgumentNullException(nameof(valueProvider));
 			}
+			if (key == null)
+			{
+				throw new ArgumentNullException(nameof(key));
+			}
 
 			m_provider = valueProvider;
 			m_key = key;

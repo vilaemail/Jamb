@@ -1,6 +1,8 @@
 ﻿using Jamb.Common;
 using Jamb.Logging;
 using System;
+using System.Configuration;
+using System.Diagnostics;
 
 namespace Jamb.Values
 {
@@ -9,6 +11,18 @@ namespace Jamb.Values
 	/// </summary>
 	public class DotNetSettingsProvider<TKey> : IValuesProvider<TKey>
 	{
+		private readonly ApplicationSettingsBase m_settings;
+
+		public DotNetSettingsProvider(ApplicationSettingsBase settings)
+		{
+			if(settings == null)
+			{
+				throw new ArgumentNullException(nameof(settings));
+			}
+
+			m_settings = settings;
+		}
+
 		/// <summary>
 		/// Tries to get the value from .NET settings. If it fails ValueException is thrown.
 		/// </summary>
@@ -17,6 +31,11 @@ namespace Jamb.Values
 		/// <returns>The value retrieved from .NET settings and casted to TValue</returns>
 		public TValue Get<TValue>(TKey key)
 		{
+			if (key == null)
+			{
+				throw new ArgumentNullException(nameof(key));
+			}
+
 			object value;
 			if (!RetrieveSetting(key, out value))
 			{
@@ -50,6 +69,11 @@ namespace Jamb.Values
 		/// <param name="value">Value to be set for the given key</param>
 		public void Set<TValue>(TKey key, TValue value)
 		{
+			if (key == null)
+			{
+				throw new ArgumentNullException(nameof(key));
+			}
+
 			if (!SaveSetting(key, value))
 			{
 				throw new ValuesException("Failed to save setting.");
@@ -64,14 +88,26 @@ namespace Jamb.Values
 		/// <returns>Whether or not it was successful</returns>
 		private bool RetrieveSetting(TKey key, out object value)
 		{
+			Debug.Assert(key != null);
+
 			try
 			{
-				value = Properties.Settings.Default[key.ToString()];
+				value = m_settings[key.ToString()];
 				return true;
 			}
-			catch (Exception e)
+			catch (SettingsPropertyNotFoundException e)
 			{
-				Logger.Instance.Log(LogLevel.Error, "Failed to retrieve setting.", () => new LogData()
+				Logger.Instance.Log(LogLevel.Error, "Setting doesn't exist.", () => new LogData()
+				{
+					{ "Key", key.ToString() },
+					{ "Exception", ExceptionHandling.CreateStringDescribingException(e) }
+				});
+				value = null;
+				return false;
+			}
+			catch(Exception e)
+			{
+				Logger.Instance.Log(LogLevel.Error, "Unexpected exception while retrieving setting.", () => new LogData()
 				{
 					{ "Key", key.ToString() },
 					{ "Exception", ExceptionHandling.CreateStringDescribingException(e) }
@@ -90,14 +126,26 @@ namespace Jamb.Values
 		/// <returns>Whether or not it was successful</returns>
 		private bool SaveSetting<TValue>(TKey key, TValue value)
 		{
+			Debug.Assert(key != null);
+
 			try
 			{
-				Properties.Settings.Default[key.ToString()] = value;
+				m_settings[key.ToString()] = value;
 				return true;
+			}
+			catch (SettingsPropertyNotFoundException e)
+			{
+				Logger.Instance.Log(LogLevel.Error, "Setting doesn't exist.", () => new LogData()
+				{
+					{ "Key", key.ToString() },
+					{ "Value", value.ToString() },
+					{ "Exception", ExceptionHandling.CreateStringDescribingException(e) }
+				});
+				return false;
 			}
 			catch (Exception e)
 			{
-				Logger.Instance.Log(LogLevel.Error, "Failed to save setting.", () => new LogData()
+				Logger.Instance.Log(LogLevel.Error, "Unexpected failure while saving a setting.", () => new LogData()
 				{
 					{ "Key", key.ToString() },
 					{ "Value", value.ToString() },

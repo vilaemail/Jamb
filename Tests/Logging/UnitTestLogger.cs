@@ -14,9 +14,16 @@ namespace JambTests.Logging
 		}
 
 		[TestMethod]
-		public void Instance_AtBeginning_IsNullLogger()
+		public void Instance_AtBeginning_IsNullLoggerThatEvaluatesLogData()
 		{
-			Assert.AreEqual(typeof(NullLogger), Logger.Instance.GetType());
+			Assert.AreEqual(typeof(NullLoggerThatEvaluatesLogData), Logger.Instance.GetType());
+		}
+
+		[TestMethod]
+		public void Instance_WhenSetToNull_IsNullLoggerThatEvaluatesLogData()
+		{
+			Logger.SetImplementation(null);
+			Assert.AreEqual(typeof(NullLoggerThatEvaluatesLogData), Logger.Instance.GetType());
 		}
 
 		[TestMethod]

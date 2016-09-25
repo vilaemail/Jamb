@@ -1,7 +1,18 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)">
-  <Profiles>
-    <Profile Name="(Default)" />
-  </Profiles>
-  <Settings />
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Jamb.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="LogFolder" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">logs</Value>
+    </Setting>
+    <Setting Name="LogWrittingPeriod" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">10000</Value>
+    </Setting>
+    <Setting Name="LogFileNameFormat" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">{0:yyyy-MM-dd}_{0:H-mm-ss.fff}.log</Value>
+    </Setting>
+    <Setting Name="CrashFileNameFormat" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">crash_{0:yyyy-MM-dd}_{0:H-mm-ss}.log</Value>
+    </Setting>
+  </Settings>
 </SettingsFile>

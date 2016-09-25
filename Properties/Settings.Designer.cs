@@ -22,5 +22,41 @@ namespace Jamb.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("logs")]
+        public string LogFolder {
+            get {
+                return ((string)(this["LogFolder"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10000")]
+        public int LogWrittingPeriod {
+            get {
+                return ((int)(this["LogWrittingPeriod"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("{0:yyyy-MM-dd}_{0:H-mm-ss.fff}.log")]
+        public string LogFileNameFormat {
+            get {
+                return ((string)(this["LogFileNameFormat"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("crash_{0:yyyy-MM-dd}_{0:H-mm-ss}.log")]
+        public string CrashFileNameFormat {
+            get {
+                return ((string)(this["CrashFileNameFormat"]));
+            }
+        }
     }
 }

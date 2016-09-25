@@ -6,6 +6,8 @@
 	public enum SettingsKey
 	{
 		LogFolder,
-		LogWrittingPeriod
+		LogWrittingPeriod,
+		LogFileNameFormat,
+		CrashFileNameFormat
 	}
 }

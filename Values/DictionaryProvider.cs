@@ -21,6 +21,11 @@ namespace Jamb.Values
 		/// <returns>Value under the given key</returns>
 		public TValue Get<TValue>(TKey key)
 		{
+			if(key == null)
+			{
+				throw new ArgumentNullException(nameof(key));
+			}
+
 			object value;
 			if (!m_dictionary.TryGetValue(key, out value))
 			{
@@ -51,6 +56,11 @@ namespace Jamb.Values
 		/// </summary>
 		public void Set<TValue>(TKey key, TValue value)
 		{
+			if (key == null)
+			{
+				throw new ArgumentNullException(nameof(key));
+			}
+
 			m_dictionary[key] = value;
 		}
 	}

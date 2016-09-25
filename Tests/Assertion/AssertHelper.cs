@@ -39,8 +39,8 @@ namespace JambTests.Assertion
 
 			// Assert we had expected exception
 			Assert.IsNotNull(thrownException, "No exception was thrown. Custom message: " + failureMessage);
-			Assert.AreEqual(expectedExceptionType, thrownException.GetType(), "Exception if not of expected type. Custom message: " + failureMessage);
-			Assert.IsTrue(thrownException.Message.Contains(textExceptionMessageShouldContain), "Exception should contain the text: " + textExceptionMessageShouldContain + ". Custom message: " + failureMessage);
+			Assert.AreEqual(expectedExceptionType, thrownException.GetType(), "Exception if not of expected type. Custom message: " + failureMessage + "\nThrown exception details: " + Jamb.Common.ExceptionHandling.CreateStringDescribingException(thrownException));
+			Assert.IsTrue(thrownException.Message.Contains(textExceptionMessageShouldContain), "Exception should contain the text: " + textExceptionMessageShouldContain + ". Custom message: " + failureMessage + "\nThrown exception details: " + Jamb.Common.ExceptionHandling.CreateStringDescribingException(thrownException));
 
 			return thrownException;
 		}

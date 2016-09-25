@@ -62,7 +62,7 @@ namespace JambTests.Common
 		public void CreateStringDescribingException_NestedActualException_ReturnsExpectedString()
 		{
 			const string expectedResultRegex =
-				@"Exception Found:\nType: System\.ApplicationException\nMessage: Test exception message\nSource: JambTests\nStacktrace:    at JambTests\.Common\.UnitTestExceptionHandling\.CreateStringDescribingException_NestedActualException_ReturnsExpectedString\(\) in [a-zA-Z]:[^:]+:line [0-9]+\n  Inner Exception Found:\n  Type: System\.ArgumentNullException\n  Message: Test inner exception message\r\n  Message: Parameter name: paramname\n  Source: JambTests\n  Stacktrace:    at JambTests\.Common\.UnitTestExceptionHandling\.ExceptionThrower\(Exception e\) in [a-zA-Z]:[^:]+:line [0-9]+\r\n  Stacktrace:    at JambTests.Common.UnitTestExceptionHandling.CreateStringDescribingException_NestedActualException_ReturnsExpectedString\(\) in [a-zA-Z]:[^:]+:line [0-9]+";
+				@"Exception Found:\nType: System\.ApplicationException\nMessage: Test exception message\nSource: JambTests\nStacktrace:    at JambTests\.Common\.UnitTestExceptionHandling\.CreateStringDescribingException_NestedActualException_ReturnsExpectedString\(\) in [a-zA-Z]:[^:]+:line [0-9]+\n  Inner Exception Found:\n  Type: System\.ArgumentNullException\n  Message: Test inner exception message\r?\n  Message: Parameter name: paramname\n  Source: JambTests\n  Stacktrace:    at [a-zA-Z\._]*\([a-zA-Z\. ]*\) in [a-zA-Z]:[^:]+:line [0-9]+(\r\n  Stacktrace:    at JambTests.Common.UnitTestExceptionHandling.CreateStringDescribingException_NestedActualException_ReturnsExpectedString\(\) in [a-zA-Z]:[^:]+:line [0-9]+)?";
 			Exception catchedException = null;
 			try
 			{

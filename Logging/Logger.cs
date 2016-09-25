@@ -12,7 +12,7 @@ namespace Jamb.Logging
 		/// <summary>
 		/// Changes the implementation of logger used by the application.
 		/// </summary>
-		internal static void SetImplementation(ILogger implementation)
+		public static void SetImplementation(ILogger implementation)
 		{
 			m_impl = implementation;
 		}

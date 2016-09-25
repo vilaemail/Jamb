@@ -91,6 +91,7 @@
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Logging\LoggerFactory.cs" />
     <Compile Include="Logging\LogLevel.cs" />
+    <Compile Include="Logging\NullLogger.cs" />
     <Compile Include="Menu.cs">
       <SubType>Form</SubType>
     </Compile>

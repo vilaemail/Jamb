@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Jamb.Logging
 {
+	/// <summary>
+	/// Thrown when we fail to create log file.
+	/// </summary>
 	[Serializable]
 	public class LogFileCreationException : Exception
 	{

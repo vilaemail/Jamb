@@ -89,7 +89,16 @@ namespace JambTests.Logging
 		}
 
 		[TestCategory("Integration"), TestMethod]
-		public void Log_AfterLoggingAndDisposing_FileContainsTheLog()
+		public void AddLogEntry_WithoutInitialization_ThrowsException()
+		{
+			using (var underTest = new AsyncToFileLogConsumer("testlogs"))
+			{
+				AssertHelper.AssertExceptionHappened(() => underTest.AddLogEntry("log"), typeof(InvalidOperationException), "We should throw if we try to log without initializing the consumer");
+			}
+		}
+
+		[TestCategory("Integration"), TestMethod]
+		public void AddLogEntry_AfterLoggingAndDisposing_FileContainsTheLog()
 		{
 			using (var underTest = new AsyncToFileLogConsumer("testlogs"))
 			{
@@ -105,7 +114,7 @@ namespace JambTests.Logging
 		}
 
 		[TestCategory("Integration"), TestMethod]
-		public void Log_AfterLogging_FileDoesntContainTheLogImmediately()
+		public void AddLogEntry_AfterLogging_FileDoesntContainTheLogImmediately()
 		{
 			using (var underTest = new AsyncToFileLogConsumer("testlogs"))
 			{
@@ -127,16 +136,16 @@ namespace JambTests.Logging
 		}
 
 		[TestCategory("Integration"), TestCategory("Longrunning"), TestMethod]
-		public void Log_AfterLogging_FileContainsLogAfterLogPeriodHasPassed()
+		public void AddLogEntry_AfterLogging_FileContainsLogAfterLogPeriodHasPassed()
 		{
-			using (var logPeriodChange = new FieldChanger<int>(typeof(AsyncToFileLogConsumer).GetField("c_logPeriod", BindingFlags.Static | BindingFlags.NonPublic), null, 200))
 			using (var underTest = new AsyncToFileLogConsumer("testlogs"))
+			using (var logPeriodChange = new FieldChanger<int>(typeof(AsyncToFileLogConsumer).GetField("c_logPeriod", BindingFlags.Instance | BindingFlags.NonPublic), underTest, 200))
 			{
 				underTest.Initialize();
 				underTest.AddLogEntry("LOG!");
 				underTest.AddLogEntry("CooL");
 
-				Thread.Sleep(1000);
+				Thread.Sleep(600);
 
 				string fileContents = null;
 				var files = Directory.EnumerateFiles("testlogs");

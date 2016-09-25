@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Jamb.Logging
 {
+	/// <summary>
+	/// Specifies importance of the specific log.
+	/// </summary>
 	public enum LogLevel
 	{
 		Debug = 5,

@@ -1,15 +1,25 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 
 namespace Jamb.Logging
 {
+	/// <summary>
+	/// Consumes the given logs by writting them to file asynchronously on another thread.
+	/// Needs to be initialized before it is used.
+	/// </summary>
 	internal class AsyncToFileLogConsumer : ILogConsumer
 	{
 		private readonly string m_logDirectory;
-		private static readonly int c_logPeriod = 10000;
+		private int c_logPeriod = 10000;
+		private bool m_initialized = false;
 
+		/// <summary>
+		/// Creates a log consumer that will write to the given log directory.
+		/// </summary>
+		/// <param name="logDirectory"></param>
 		public AsyncToFileLogConsumer(string logDirectory)
 		{
 			m_logDirectory = logDirectory;
@@ -20,21 +30,38 @@ namespace Jamb.Logging
 		private Thread m_logThread;
 		private bool m_stopThread = false;
 
+		/// <summary>
+		/// Creates the log file and starts the asynchronous thread for writting to the file
+		/// </summary>
 		public void Initialize()
 		{
 			CreateLogFile();
 			m_messageQueue = new ConcurrentQueue<string>();
 			m_logThread = new Thread(LogThreadFunc);
+			m_initialized = true;
 			m_logThread.Start();
 		}
 
+		/// <summary>
+		/// Consumes log entry by writting it to the queue.
+		/// </summary>
 		public void AddLogEntry(string entry)
 		{
+			if(!m_initialized)
+			{
+				throw new InvalidOperationException("Can't log when not initialized");
+			}
+
 			m_messageQueue.Enqueue(entry);
 		}
 
+		/// <summary>
+		/// Executes asynchronously and periodically writes to file contents of the queue.
+		/// </summary>
 		private void LogThreadFunc()
 		{
+			Debug.Assert(m_initialized);
+
 			m_logFile.WriteLine("#Begining log file {0:O}#", DateTime.UtcNow);
 			m_logFile.Flush();
 
@@ -53,6 +80,9 @@ namespace Jamb.Logging
 			}
 		}
 
+		/// <summary>
+		/// Logs all messages from the queue to the file.
+		/// </summary>
 		private void LogMessagesFromQueue()
 		{
 			string toLog;
@@ -62,6 +92,9 @@ namespace Jamb.Logging
 			}
 		}
 
+		/// <summary>
+		/// Releases all resources by stopping logging thread and finalizing the log file.
+		/// </summary>
 		public void Dispose()
 		{
 			// Stop the logging thread
@@ -69,6 +102,11 @@ namespace Jamb.Logging
 			m_logThread?.Interrupt();
 			m_logThread?.Join();
 			m_logThread = null;
+			// Log if anything remained in our queue
+			if (m_messageQueue != null && m_logFile != null)
+			{
+				LogMessagesFromQueue();
+			}
 			// Finish the log file and close it
 			m_logFile?.WriteLine("#EOF:" + m_messageQueue.Count + "#");
 			m_logFile?.Flush();
@@ -77,6 +115,9 @@ namespace Jamb.Logging
 			m_logFile = null;
 		}
 
+		/// <summary>
+		/// Creates the log file and throws LogFileCreationException if unsuccessful.
+		/// </summary>
 		private void CreateLogFile()
 		{
 			try
@@ -89,7 +130,7 @@ namespace Jamb.Logging
 
 				DateTime now = DateTime.UtcNow;
 
-				string logFilePath = string.Format("{0}\\{1:yyyy-MM-dd}_{1:H-mm-ss}.log", folderFullPath, now);
+				string logFilePath = string.Format("{0}\\{1:yyyy-MM-dd}_{1:H-mm-ss.fff}.log", folderFullPath, now);
 				if(File.Exists(logFilePath))
 				{
 					throw new LogFileCreationException("Log file already exists.");

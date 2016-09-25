@@ -10,11 +10,13 @@ using System.Windows.Forms;
 
 namespace Jamb
 {
-    public partial class Menu : Form
-    {
-        public Menu()
-        {
-            InitializeComponent();
-        }
-    }
+	public partial class Menu : Form
+	{
+		public Menu()
+		{
+			Logging.Logger.Instance.Log(Logging.LogLevel.Info, "Menu constructor invoked");
+			InitializeComponent();
+			Logging.Logger.Instance.Log(Logging.LogLevel.Info, "Components initialized. Application is running.");
+		}
+	}
 }

@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Jamb.Values
+﻿namespace Jamb.Values
 {
+	/// <summary>
+	///  Static class used for receiving application level instance of IValuesProvider for settings.
+	/// </summary>
 	public class Settings
 	{
 		private static IValuesProvider<SettingsKey> m_impl = new NullValueProvider<SettingsKey>();

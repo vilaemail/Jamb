@@ -1,15 +1,20 @@
 ﻿using Jamb.Common;
 using Jamb.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Jamb.Values
 {
+	/// <summary>
+	/// Returns values by translating TKey to string and using that as a key to .NET provided settings.
+	/// </summary>
 	public class DotNetSettingsProvider<TKey> : IValuesProvider<TKey>
 	{
+		/// <summary>
+		/// Tries to get the value from .NET settings. If it fails ValueException is thrown.
+		/// </summary>
+		/// <typeparam name="TValue">Type of which returned value should be</typeparam>
+		/// <param name="key">Key that will be converted to string and used as a key in .NET settings</param>
+		/// <returns>The value retrieved from .NET settings and casted to TValue</returns>
 		public TValue Get<TValue>(TKey key)
 		{
 			object value;
@@ -37,6 +42,12 @@ namespace Jamb.Values
 			}
 		}
 
+		/// <summary>
+		/// Tries to set the value in .NET settings. If it fails ValueException is thrown.
+		/// </summary>
+		/// <typeparam name="TValue">The type of which is the value</typeparam>
+		/// <param name="key">Key that will be converted to string and used as a key in .NET settings</param>
+		/// <param name="value">Value to be set for the given key</param>
 		public void Set<TValue>(TKey key, TValue value)
 		{
 			if (!SaveSetting(key, value))
@@ -45,6 +56,12 @@ namespace Jamb.Values
 			}
 		}
 
+		/// <summary>
+		/// Tries to retrieve the setting from .NET settings.
+		/// </summary>
+		/// <param name="key">Key for which we are looking for value</param>
+		/// <param name="value">Object retrieved from .NET settings if successful</param>
+		/// <returns>Whether or not it was successful</returns>
 		private bool RetrieveSetting(TKey key, out object value)
 		{
 			try
@@ -64,6 +81,13 @@ namespace Jamb.Values
 			}
 		}
 
+		/// <summary>
+		/// Tries to save the setting under the given key in .NET settings.
+		/// </summary>
+		/// <typeparam name="TValue">Type of the value</typeparam>
+		/// <param name="key">Key for which we will set the value</param>
+		/// <param name="value">Value to be set</param>
+		/// <returns>Whether or not it was successful</returns>
 		private bool SaveSetting<TValue>(TKey key, TValue value)
 		{
 			try
@@ -82,6 +106,5 @@ namespace Jamb.Values
 				return false;
 			}
 		}
-
 	}
 }

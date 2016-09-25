@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Jamb.Values
+﻿namespace Jamb.Values
 {
+	/// <summary>
+	/// Application specific settings.
+	/// </summary>
 	public enum SettingsKey
 	{
 		LogFolder,

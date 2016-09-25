@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Jamb.Values
 {
+	/// <summary>
+	/// Thrown if get or set of a value fails
+	/// </summary>
 	[Serializable]
 	public class ValuesException : Exception
 	{

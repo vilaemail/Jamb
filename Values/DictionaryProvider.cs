@@ -2,16 +2,23 @@
 using Jamb.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Jamb.Values
 {
+	/// <summary>
+	/// Provides values by storing them in memory using a dictionary.
+	/// </summary>
+	/// <typeparam name="TKey">Type of the dictionary key</typeparam>
 	public class DictionaryProvider<TKey> : IValuesProvider<TKey>
 	{
 		private Dictionary<TKey, object> m_dictionary = new Dictionary<TKey, object>();
 
+		/// <summary>
+		/// Tries to retrieve value for the given key from dictionary. Throws ValueException if it fails.
+		/// </summary>
+		/// <typeparam name="TValue">Type of the value stored for the given key</typeparam>
+		/// <param name="key">Key for which we will search for value</param>
+		/// <returns>Value under the given key</returns>
 		public TValue Get<TValue>(TKey key)
 		{
 			object value;
@@ -39,6 +46,9 @@ namespace Jamb.Values
 			}
 		}
 
+		/// <summary>
+		/// Sets the value for the given key.
+		/// </summary>
 		public void Set<TValue>(TKey key, TValue value)
 		{
 			m_dictionary[key] = value;

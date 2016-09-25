@@ -8,7 +8,7 @@ namespace Jamb.Logging
 	internal class AsyncToFileLogConsumer : ILogConsumer
 	{
 		private readonly string m_logDirectory;
-		private const int c_logPeriod = 10000;
+		private static readonly int c_logPeriod = 10000;
 
 		public AsyncToFileLogConsumer(string logDirectory)
 		{
@@ -43,13 +43,13 @@ namespace Jamb.Logging
 				try
 				{
 					Thread.Sleep(c_logPeriod);
-					LogMessagesFromQueue();
-					m_logFile.Flush();
 				}
 				catch (ThreadInterruptedException)
 				{
-					continue;
+					// Ignore, we will check in the while condition should we stop
 				}
+				LogMessagesFromQueue();
+				m_logFile.Flush();
 			}
 		}
 

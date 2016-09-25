@@ -1,11 +1,7 @@
-﻿using Jamb.Logging;
-using Jamb.Values;
+﻿using Jamb.Values;
 using JambTests.Assertion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using System;
-using System.Configuration;
-using System.Linq;
 
 namespace JambTests.Values
 {

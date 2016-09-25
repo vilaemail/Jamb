@@ -1,4 +1,10 @@
 This file contains a TODO list for project evolution.
 
-* Add logging mechanism to the codebase
-* Add settings mechanism and replace all constants with unified approach
+* Replace constants with settings
+* Improve unit test coverage of communications subsystem
+* Implement Communicator that is able to send and receive messages async and sync. Application should use this class explicitly for sending a message.
+* Application should receive messages asynchronously, validate them for correctness and apply to the model.
+* Communicator should detect broken connection and report it as unrecoverable error.
+* Create Communicator in such a way that it is easily extendible to:
+  - Have retry logic of reestablishing the connection
+  - Have multiple connections and possibility to broadcast, multicast or singlecast to any of them.

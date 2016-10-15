@@ -8,6 +8,8 @@
 		LogFolder,
 		LogWrittingPeriod,
 		LogFileNameFormat,
-		CrashFileNameFormat
+		CrashFileNameFormat,
+		CommunicationMaxMessageSizeInB,
+		CommunicationBackoffInMs
 	}
 }

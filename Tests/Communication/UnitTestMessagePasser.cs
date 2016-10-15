@@ -1,5 +1,6 @@
 ﻿using Jamb.Communication;
 using Jamb.Communication.WireProtocol;
+using Jamb.Values;
 using JambTests.Assertion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -22,7 +23,7 @@ namespace JambTests.Communication
 		public void SendMessage_NullMessage_ThrowsException()
 		{
 			Mock<INetworkStream> mockStream = new Mock<INetworkStream>(MockBehavior.Strict);
-			MessagePasser underTest = new MessagePasser(mockStream.Object);
+			MessagePasser underTest = ConstructWithDefaultSettings(mockStream.Object);
 
 			AssertHelper.AssertExceptionHappened(() => underTest.SendMessage(null, new CancellationToken()), typeof(ArgumentNullException), "We should thrown on null argument");
 		}
@@ -32,7 +33,7 @@ namespace JambTests.Communication
 		{
 			Mock<INetworkStream> mockStream = new Mock<INetworkStream>(MockBehavior.Strict);
 			mockStream.Setup(obj => obj.Write(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>())).Throws(new ApplicationException("Unit test exception"));
-			MessagePasser underTest = new MessagePasser(mockStream.Object);
+			MessagePasser underTest = ConstructWithDefaultSettings(mockStream.Object);
 
 			AssertHelper.AssertExceptionHappened(() => underTest.SendMessage(CreateNormalMessage(10), new CancellationToken()), typeof(UnknownCommunicationException), "We should throw on unexpected exception");
 		}
@@ -77,7 +78,7 @@ namespace JambTests.Communication
 			// Setup mock network stream that simply writes to buffer
 			WriteNetworkStreamBuffer writeBuffer = new WriteNetworkStreamBuffer(delay);
 			Mock<INetworkStream> mockStream = SetupWriteOnlyNetworkStream(writeBuffer);
-			MessagePasser underTest = new MessagePasser(mockStream.Object);
+			MessagePasser underTest = ConstructWithDefaultSettings(mockStream.Object);
 
 			if (sendAndAssertCode != null)
 			{
@@ -105,7 +106,7 @@ namespace JambTests.Communication
 		{
 			Mock<INetworkStream> mockStream = new Mock<INetworkStream>(MockBehavior.Strict);
 			mockStream.Setup(obj => obj.Read(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>())).Throws(new ApplicationException("Unit test exception"));
-			MessagePasser underTest = new MessagePasser(mockStream.Object);
+			MessagePasser underTest = ConstructWithDefaultSettings(mockStream.Object);
 
 			AssertHelper.AssertExceptionHappened(() => underTest.ReceiveMessage(new CancellationToken()), typeof(UnknownCommunicationException), "We should throw on unexpected exception");
 		}
@@ -117,7 +118,7 @@ namespace JambTests.Communication
 			message[4]++; // Change protocol version
 			ReadNetworkStreamBuffer readBuffer = new ReadNetworkStreamBuffer(message);
 			Mock<INetworkStream> mockStream = SetupReadOnlyNetworkStream(readBuffer);
-			MessagePasser underTest = new MessagePasser(mockStream.Object);
+			MessagePasser underTest = ConstructWithDefaultSettings(mockStream.Object);
 
 			AssertHelper.AssertExceptionHappened(() => underTest.ReceiveMessage(new CancellationToken()), typeof(ProtocolException), "We should throw on unsupported protocol", "Unsupported protocol version");
 		}
@@ -129,7 +130,7 @@ namespace JambTests.Communication
 			message[0] = 100; // Modify header such that message is huge
 			ReadNetworkStreamBuffer readBuffer = new ReadNetworkStreamBuffer(message);
 			Mock<INetworkStream> mockStream = SetupReadOnlyNetworkStream(readBuffer);
-			MessagePasser underTest = new MessagePasser(mockStream.Object);
+			MessagePasser underTest = ConstructWithDefaultSettings(mockStream.Object);
 
 			AssertHelper.AssertExceptionHappened(() => underTest.ReceiveMessage(new CancellationToken()), typeof(ProtocolException), "We should throw on too large message", "Message to be received is too large");
 		}
@@ -141,7 +142,7 @@ namespace JambTests.Communication
 			message[100] = 0; // Change message contents. This should prevent us from deserializing the message.
 			ReadNetworkStreamBuffer readBuffer = new ReadNetworkStreamBuffer(message);
 			Mock<INetworkStream> mockStream = SetupReadOnlyNetworkStream(readBuffer);
-			MessagePasser underTest = new MessagePasser(mockStream.Object);
+			MessagePasser underTest = ConstructWithDefaultSettings(mockStream.Object);
 
 			AssertHelper.AssertExceptionHappened(() => underTest.ReceiveMessage(new CancellationToken()), typeof(MalformedMessageException), "We should throw on malformed message");
 		}
@@ -152,7 +153,7 @@ namespace JambTests.Communication
 			byte[] message = (byte[])s_normalMessage.Clone();
 			ReadNetworkStreamBuffer readBuffer = new ReadNetworkStreamBuffer(message);
 			Mock<INetworkStream> mockStream = SetupReadOnlyNetworkStream(readBuffer);
-			MessagePasser underTest = new MessagePasser(mockStream.Object);
+			MessagePasser underTest = ConstructWithDefaultSettings(mockStream.Object);
 
 			UnitTestMessage recivedMessage = underTest.ReceiveMessage(new CancellationToken()) as UnitTestMessage;
 			AssertNormalMessage(recivedMessage, 10);
@@ -164,7 +165,7 @@ namespace JambTests.Communication
 			byte[] message = (byte[])s_normalMessage.Clone();
 			ReadNetworkStreamBuffer readBuffer = new ReadNetworkStreamBuffer(message, 500);
 			Mock<INetworkStream> mockStream = SetupReadOnlyNetworkStream(readBuffer);
-			MessagePasser underTest = new MessagePasser(mockStream.Object);
+			MessagePasser underTest = ConstructWithDefaultSettings(mockStream.Object);
 
 			UnitTestMessage recivedMessage = underTest.ReceiveMessage(new CancellationToken()) as UnitTestMessage;
 			AssertNormalMessage(recivedMessage, 10);
@@ -176,7 +177,7 @@ namespace JambTests.Communication
 			byte[] message = (byte[])s_normalMessage.Clone();
 			ReadNetworkStreamBuffer readBuffer = new ReadNetworkStreamBuffer(message, 500);
 			Mock<INetworkStream> mockStream = SetupReadOnlyNetworkStream(readBuffer);
-			MessagePasser underTest = new MessagePasser(mockStream.Object);
+			MessagePasser underTest = ConstructWithDefaultSettings(mockStream.Object);
 
 			CancellationTokenSource cts = new CancellationTokenSource();
 			cts.CancelAfter(250);
@@ -192,7 +193,7 @@ namespace JambTests.Communication
 			byte[] message = (byte[])s_normalMessage.Clone();
 			ReadNetworkStreamBuffer readBuffer = new ReadNetworkStreamBuffer(message, 250, true);
 			Mock<INetworkStream> mockStream = SetupReadOnlyNetworkStream(readBuffer);
-			MessagePasser underTest = new MessagePasser(mockStream.Object);
+			MessagePasser underTest = ConstructWithDefaultSettings(mockStream.Object);
 
 			// Run the receiving on another thread and wait to be sure the task is retrying
 			Task<UnitTestMessage> recivedMessageTask = Task.Run(() => underTest.ReceiveMessage(new CancellationToken()) as UnitTestMessage);
@@ -300,6 +301,11 @@ namespace JambTests.Communication
 			Assert.AreEqual(expectedMessage.StringDataMember, message.StringDataMember, "String data memeber should be the same");
 			Assert.AreEqual(expectedMessage.CustomObjectDataMember.IntDataMember, message.CustomObjectDataMember.IntDataMember, "CustomObject data memeber should be the same");
 			Assert.AreEqual(0, message.IntNonDataMemeber, "Int that is not data memeber should not be the same");
+		}
+
+		private static MessagePasser ConstructWithDefaultSettings(INetworkStream stream)
+		{
+			return new MessagePasser(stream, InMemoryValue<int>.Is(10240), InMemoryValue<int>.Is(500));
 		}
 
 		/// <summary>

@@ -14,5 +14,11 @@
     <Setting Name="CrashFileNameFormat" Type="System.String" Scope="Application">
       <Value Profile="(Default)">crash_{0:yyyy-MM-dd}_{0:H-mm-ss}.log</Value>
     </Setting>
+    <Setting Name="CommunicationMaxMessageSizeInB" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">10240</Value>
+    </Setting>
+    <Setting Name="CommunicationBackoffInMs" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">500</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

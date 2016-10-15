@@ -1,4 +1,5 @@
 ﻿using Jamb.Logging;
+using Jamb.Values;
 using JambTests.Assertion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -25,11 +26,13 @@ namespace JambTests.Logging
 		}
 
 		[TestCategory("Integration"), TestMethod]
-		public void CreateAsyncToFile_NullLogFolder_ThrowsException()
+		public void CreateAsyncToFile_NullArguments_ThrowsException()
 		{
 			var underTest = new LoggerFactory();
 
-			AssertHelper.AssertExceptionHappened(() => underTest.CreateAsyncToFile(LogLevel.Info, null), typeof(ArgumentNullException), "We should throw for null log folder");
+			AssertHelper.AssertExceptionHappened(() => underTest.CreateAsyncToFile(LogLevel.Info, null, "testformat", InMemoryValue<int>.Is(10000)), typeof(ArgumentNullException), "We should throw for null log folder");
+			AssertHelper.AssertExceptionHappened(() => underTest.CreateAsyncToFile(LogLevel.Info, "testlogs", null, InMemoryValue<int>.Is(10000)), typeof(ArgumentNullException), "We should throw for null log format");
+			AssertHelper.AssertExceptionHappened(() => underTest.CreateAsyncToFile(LogLevel.Info, "testlogs", "testformat", null), typeof(ArgumentNullException), "We should throw for null log period");
 		}
 
 		[TestCategory("Integration"), TestMethod]
@@ -37,7 +40,7 @@ namespace JambTests.Logging
 		{
 			var underTest = new LoggerFactory();
 
-			ILogger logger = underTest.CreateAsyncToFile(LogLevel.Info, "testlogs");
+			ILogger logger = underTest.CreateAsyncToFile(LogLevel.Info, "testlogs", "testformat", InMemoryValue<int>.Is(10000));
 			logger.Dispose();
 
 			Assert.AreEqual(typeof(DefaultLogger), logger.GetType());

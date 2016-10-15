@@ -18,12 +18,20 @@ namespace Jamb
 		[STAThread]
 		static void Main()
 		{
+			// Initialize settings
+			Values.Settings.SetImplementation(new Values.DotNetSettingsProvider<Values.SettingsKey>(Properties.Settings.Default));
+
 			// Initialize logging
+			Logging.Logger.SetImplementation(new Logging.LoggerFactory().CreateAsyncToFile(
 #if DEBUG
-			Logging.Logger.SetImplementation(new Logging.LoggerFactory().CreateAsyncToFile(Logging.LogLevel.Debug, "logs"));
+				minimumLogLevel: Logging.LogLevel.Debug,
 #else
-			Logging.Logger.SetImplementation(new Logging.LoggerFactory().CreateAsyncToFile(Logging.LogLevel.Info, "logs"));
+				minimumLogLevel: Logging.LogLevel.Info,
 #endif
+				logFolder: Values.Settings.CurrentValue<string>(Values.SettingsKey.LogFolder),
+				logFileNaming: Values.Settings.CurrentValue<string>(Values.SettingsKey.LogFileNameFormat),
+				logPeriodInS: Values.Settings.Changable<int>(Values.SettingsKey.LogWrittingPeriod)));
+
 			// Setup global event handlers
 			Application.ApplicationExit += (object sender, EventArgs e) => ExitCleanup();
 			AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(GlobalExceptionHandler);
@@ -74,7 +82,7 @@ namespace Jamb
 				}
 
 				// Log exception details in separate file
-				string outputInfoFile = string.Format("logs\\crash_{0:yyyy-MM-dd}_{0:H-mm-ss}.log", DateTime.UtcNow);
+				string outputInfoFile = string.Format("{0}\\{1}", Values.Settings.CurrentValue<string>(Values.SettingsKey.LogFolder), string.Format(Values.Settings.CurrentValue<string>(Values.SettingsKey.CrashFileNameFormat), DateTime.UtcNow));
 				File.WriteAllText(outputInfoFile, exceptionDetails); //TODO: Make this path generation separate
 
 				// Exit from application

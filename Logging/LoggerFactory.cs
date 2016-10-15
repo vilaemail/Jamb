@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Jamb.Values;
+using System;
 
 namespace Jamb.Logging
 {
@@ -12,15 +13,25 @@ namespace Jamb.Logging
 		/// </summary>
 		/// <param name="minimumLogLevel">All logs below this level will be ignored.</param>
 		/// <param name="logFolder">Folder in which log file will reside.</param>
+		/// <param name="logFileNaming">Template for naming our log files.</param>
+		/// <param name="logPeriodInS">After how many seconds we should write logs to file.</param>
 		/// <returns>Logger that can be used for logging.</returns>
-		public ILogger CreateAsyncToFile(LogLevel minimumLogLevel, string logFolder)
+		public ILogger CreateAsyncToFile(LogLevel minimumLogLevel, string logFolder, string logFileNaming, IValue<int> logPeriodInS)
 		{
 			if(logFolder == null)
 			{
 				throw new ArgumentNullException(nameof(logFolder));
 			}
+			if (logFileNaming == null)
+			{
+				throw new ArgumentNullException(nameof(logFileNaming));
+			}
+			if (logPeriodInS == null)
+			{
+				throw new ArgumentNullException(nameof(logPeriodInS));
+			}
 
-			var consumer = new AsyncToFileLogConsumer(logFolder);
+			var consumer = new AsyncToFileLogConsumer(logFolder, logFileNaming, logPeriodInS);
 			consumer.Initialize();
 			var formatter = new DefaultLogFormatter();
 

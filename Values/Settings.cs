@@ -30,5 +30,36 @@
 				return m_impl;
 			}
 		}
+
+		/// <summary>
+		/// Returns a IValue that changes when setting changes.
+		/// </summary>
+		/// <typeparam name="TValue">Type of setting value</typeparam>
+		/// <param name="key">Key of the setting</param>
+		public static IValue<TValue> Changable<TValue>(SettingsKey key)
+		{
+			return new ProviderBackedValue<SettingsKey, TValue>(Instance, key);
+		}
+
+		/// <summary>
+		/// Returns a IValue that returns the current setting. If setting changes in the future it
+		/// will not be reflected by IValue
+		/// </summary>
+		/// <typeparam name="TValue">Type of setting value</typeparam>
+		/// <param name="key">Key of the setting</param>
+		public static IValue<TValue> FromCurrentValue<TValue>(SettingsKey key)
+		{
+			return new InMemoryValue<TValue>(Instance.Get<TValue>(key));
+		}
+
+		/// <summary>
+		/// Returns the current value of the setting
+		/// </summary>
+		/// <typeparam name="TValue">Type of setting value</typeparam>
+		/// <param name="key">Key of the setting</param>
+		public static TValue CurrentValue<TValue>(SettingsKey key)
+		{
+			return Instance.Get<TValue>(key);
+		}
 	}
 }

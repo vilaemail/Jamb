@@ -1,6 +1,7 @@
 ﻿using Jamb.Common;
 using Jamb.Communication;
 using Jamb.Communication.WireProtocol;
+using Jamb.Values;
 using JambTests.Assertion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -141,7 +142,7 @@ namespace JambTests.Communication
 			var serverStream = serverAndClientStream.Item1;
 			var clientStream = serverAndClientStream.Item2;
 
-			return new Tuple<MessagePasser, MessagePasser>(new MessagePasser(serverStream), new MessagePasser(clientStream));
+			return new Tuple<MessagePasser, MessagePasser>(new MessagePasser(serverStream, InMemoryValue<int>.Is(10240), InMemoryValue<int>.Is(500)), new MessagePasser(clientStream, InMemoryValue<int>.Is(10240), InMemoryValue<int>.Is(500)));
 		}
 
 	}

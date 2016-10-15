@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Runtime.Serialization.Json;
 using System.IO;
 using System.Runtime.Serialization;
+using Jamb.Values;
 
 namespace Jamb.Communication
 {
@@ -14,26 +15,30 @@ namespace Jamb.Communication
 	/// Able to send and receive messages synchronosuly with another instance of this class on another computer.
 	/// It is the owner of all resources that are used for this purpose.
 	/// </summary>
-	class MessagePasser : IDisposable
+	internal class MessagePasser : IDisposable
 	{
-		private const int c_maxMessageSize = 1024 * 10; // in B
-		private const int c_backoffTime = 500; // in ms
 		private const int c_headerSize = 5; // in B
 		private const byte c_protocolVersion = 1;
 		private const string c_readTimeoutMessage = "A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond";
 		// Network stream we use to communicate.
 		private readonly INetworkStream m_stream;
+		private readonly IValue<int> m_maxMessageSize; // in B
+		private readonly IValue<int> m_backoffTime; // in ms
 
 		/// <summary>
 		/// Construct MessagePasser with the given stream.
 		/// Create instances through approapriate factory.
 		/// Ideally we would enclose this class and factory within same assembly, however that seems to be an overkill at the moment.
 		/// </summary>
-		internal MessagePasser(INetworkStream stream)
+		internal MessagePasser(INetworkStream stream, IValue<int> maxMessageSizeInB, IValue<int> backoffInMs)
 		{
 			Debug.Assert(stream != null);
+			Debug.Assert(maxMessageSizeInB != null);
+			Debug.Assert(backoffInMs != null);
 
 			m_stream = stream;
+			m_maxMessageSize = maxMessageSizeInB;
+			m_backoffTime = backoffInMs;
 		}
 
 		/// <summary>
@@ -119,7 +124,7 @@ namespace Jamb.Communication
 		{
 			Debug.Assert(bytesToSend != null);
 			// Make sure message is the maximum acceptable
-			if (bytesToSend.Length + c_headerSize > c_maxMessageSize)
+			if (bytesToSend.Length + c_headerSize > m_maxMessageSize.Get())
 			{
 				throw new ProtocolException("Size of message to be sent is larger than the maximum.");
 			}
@@ -154,7 +159,7 @@ namespace Jamb.Communication
 			// Receive header and process it
 			byte[] messageHeader = ReadBytesFromStream(c_headerSize, cancelToken);
 			int messageSize = UnpackAndValidateMessageHeader(messageHeader);
-			if (messageSize > c_maxMessageSize)
+			if (messageSize > m_maxMessageSize.Get())
 			{
 				throw new ProtocolException("Message to be received is too large.");
 			}
@@ -188,7 +193,7 @@ namespace Jamb.Communication
 		{
 			// Assert input argument
 			Debug.Assert(numberOfBytes > 0);
-			Debug.Assert(numberOfBytes <= c_maxMessageSize);
+			Debug.Assert(numberOfBytes <= m_maxMessageSize.Get());
 			// Prepare buffer for data that will be returned
 			byte[] buffer = new byte[numberOfBytes];
 			// Read from the stream
@@ -200,7 +205,7 @@ namespace Jamb.Communication
 				// If there is no data backoff for some time
 				if (!m_stream.DataAvailable)
 				{
-					Thread.Sleep(c_backoffTime);
+					Thread.Sleep(m_backoffTime.Get());
 					continue;
 				}
 

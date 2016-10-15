@@ -31,5 +31,13 @@
 		{
 			m_value = newValue;
 		}
+
+		/// <summary>
+		/// Creates an instance that returns the given value.
+		/// </summary>
+		public static InMemoryValue<TValue> Is(TValue value)
+		{
+			return new InMemoryValue<TValue>(value);
+		}
 	}
 }

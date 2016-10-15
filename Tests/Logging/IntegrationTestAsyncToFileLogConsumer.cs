@@ -2,6 +2,7 @@
 using Jamb.Communication;
 using Jamb.Communication.WireProtocol;
 using Jamb.Logging;
+using Jamb.Values;
 using JambTests.Assertion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -40,7 +41,7 @@ namespace JambTests.Logging
 		[TestCategory("Integration"), TestMethod]
 		public void Initialize_WhenInitializedLogger_DirectoryCreatedAndLoggingThreadPresent()
 		{
-			var underTest = new AsyncToFileLogConsumer("testlogs");
+			var underTest = CreateForUnitTest("testlogs");
 
 			int threadsBeforeInitializingLogger = Process.GetCurrentProcess().Threads.Count;
 			underTest.Initialize();
@@ -58,7 +59,7 @@ namespace JambTests.Logging
 		[TestCategory("Integration"), TestMethod]
 		public void Initialize_InvalidPath_ExceptionThrown()
 		{
-			using (var underTest = new AsyncToFileLogConsumer(":!?\\fawno01!-@z/"))
+			using (var underTest = CreateForUnitTest(":!?\\fawno01!-@z/"))
 			{
 				AssertHelper.AssertExceptionHappened(() => underTest.Initialize(), typeof(LogFileCreationException), "We should fail for invalid path", "Given path is invalid");
 			}
@@ -68,7 +69,7 @@ namespace JambTests.Logging
 		public void Initialize_NoAccessToPath_ExceptionThrown()
 		{
 			var winFolder = Environment.GetFolderPath(Environment.SpecialFolder.Windows).TrimEnd('\\') + '\\';
-			using (var underTest = new AsyncToFileLogConsumer(winFolder + "_accessDenied"))
+			using (var underTest = CreateForUnitTest(winFolder + "_accessDenied"))
 			{
 				AssertHelper.AssertExceptionHappened(() => underTest.Initialize(), typeof(LogFileCreationException), "We should fail for path where we have no access rights", "No privilidges");
 			}
@@ -77,7 +78,7 @@ namespace JambTests.Logging
 		[TestCategory("Integration"), TestMethod]
 		public void Initialize_WhenInitializedAndDisposed_FileContainsStartAndEndLog()
 		{
-			using (var underTest = new AsyncToFileLogConsumer("testlogs"))
+			using (var underTest = CreateForUnitTest("testlogs"))
 			{
 				underTest.Initialize();
 			}
@@ -91,7 +92,7 @@ namespace JambTests.Logging
 		[TestCategory("Integration"), TestMethod]
 		public void AddLogEntry_WithoutInitialization_ThrowsException()
 		{
-			using (var underTest = new AsyncToFileLogConsumer("testlogs"))
+			using (var underTest = CreateForUnitTest("testlogs"))
 			{
 				AssertHelper.AssertExceptionHappened(() => underTest.AddLogEntry("log"), typeof(InvalidOperationException), "We should throw if we try to log without initializing the consumer");
 			}
@@ -100,7 +101,7 @@ namespace JambTests.Logging
 		[TestCategory("Integration"), TestMethod]
 		public void AddLogEntry_AfterLoggingAndDisposing_FileContainsTheLog()
 		{
-			using (var underTest = new AsyncToFileLogConsumer("testlogs"))
+			using (var underTest = CreateForUnitTest("testlogs"))
 			{
 				underTest.Initialize();
 				underTest.AddLogEntry("LOG!");
@@ -116,7 +117,7 @@ namespace JambTests.Logging
 		[TestCategory("Integration"), TestMethod]
 		public void AddLogEntry_AfterLogging_FileDoesntContainTheLogImmediately()
 		{
-			using (var underTest = new AsyncToFileLogConsumer("testlogs"))
+			using (var underTest = CreateForUnitTest("testlogs"))
 			{
 				underTest.Initialize();
 				underTest.AddLogEntry("LOG!");
@@ -138,8 +139,7 @@ namespace JambTests.Logging
 		[TestCategory("Integration"), TestCategory("Longrunning"), TestMethod]
 		public void AddLogEntry_AfterLogging_FileContainsLogAfterLogPeriodHasPassed()
 		{
-			using (var underTest = new AsyncToFileLogConsumer("testlogs"))
-			using (var logPeriodChange = new FieldChanger<int>(typeof(AsyncToFileLogConsumer).GetField("c_logPeriod", BindingFlags.Instance | BindingFlags.NonPublic), underTest, 200))
+			using (var underTest = CreateForUnitTest("testlogs", 200))
 			{
 				underTest.Initialize();
 				underTest.AddLogEntry("LOG!");
@@ -158,6 +158,11 @@ namespace JambTests.Logging
 				Assert.IsTrue(fileContents.Contains("LOG!"), "We should have the logged message in the file 1");
 				Assert.IsTrue(fileContents.Contains("CooL"), "We should have the logged message in the file 2");
 			}
+		}
+
+		private static AsyncToFileLogConsumer CreateForUnitTest(string logDirectory, int logPeriod = 10000)
+		{
+			return new AsyncToFileLogConsumer(logDirectory, "testLog_{0:yyyy-MM-dd}_{0:H-mm-ss.fff}.log", InMemoryValue<int>.Is(logPeriod));
 		}
 
 		private class FieldChanger<T> : IDisposable

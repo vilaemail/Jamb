@@ -1,5 +1,6 @@
 ﻿using Jamb.Values;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
 
 namespace JambTests.Values
 {
@@ -9,22 +10,32 @@ namespace JambTests.Values
 		[TestMethod]
 		public void Get_WhenCalled_ReturnsInitialValue()
 		{
-			var underTest = new InMemoryValue<string>("blah");
+			var underTests = new List<InMemoryValue<string>>() { new InMemoryValue<string>("blah"), InMemoryValue<string>.Is("blah") };
 
-			string returnedValue = underTest.Get();
+			int i = 0;
+			foreach (var underTest in underTests)
+			{
+				string returnedValue = underTest.Get();
 
-			Assert.AreEqual("blah", returnedValue);
+				Assert.AreEqual("blah", returnedValue, "Failed in test case #" + i);
+				i++;
+			}
 		}
 
 		[TestMethod]
 		public void Set_WhenCalled_ChangesTheValue()
 		{
-			var underTest = new InMemoryValue<string>("blah");
+			var underTests = new List<InMemoryValue<string>>() { new InMemoryValue<string>("blah"), InMemoryValue<string>.Is("blah") };
 
-			underTest.Set("new");
-			string returnedValue = underTest.Get();
+			int i = 0;
+			foreach (var underTest in underTests)
+			{
+				underTest.Set("new");
+				string returnedValue = underTest.Get();
 
-			Assert.AreEqual("new", returnedValue);
+				Assert.AreEqual("new", returnedValue, "Failed in test case #" + i);
+				i++;
+			}
 		}
 	}
 }

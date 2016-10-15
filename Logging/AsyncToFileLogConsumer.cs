@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Jamb.Values;
+using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
@@ -13,16 +14,25 @@ namespace Jamb.Logging
 	internal class AsyncToFileLogConsumer : ILogConsumer
 	{
 		private readonly string m_logDirectory;
-		private int c_logPeriod = 10000;
+		private readonly string m_logFileNaming;
+		private readonly IValue<int> m_logPeriod;
 		private bool m_initialized = false;
 
 		/// <summary>
 		/// Creates a log consumer that will write to the given log directory.
 		/// </summary>
-		/// <param name="logDirectory"></param>
-		public AsyncToFileLogConsumer(string logDirectory)
+		/// <param name="logDirectory">Where will we store our log files</param>
+		/// <param name="logFileNaming">Template for naming schema of our files</param>
+		/// <param name="logPeriodInS">After how many seconds should we write logs from memory to file</param>
+		public AsyncToFileLogConsumer(string logDirectory, string logFileNaming, IValue<int> logPeriodInS)
 		{
+			Debug.Assert(!string.IsNullOrEmpty(logDirectory));
+			Debug.Assert(!string.IsNullOrEmpty(logFileNaming));
+			Debug.Assert(logPeriodInS != null);
+
 			m_logDirectory = logDirectory;
+			m_logFileNaming = logFileNaming;
+			m_logPeriod = logPeriodInS;
 		}
 
 		private StreamWriter m_logFile;
@@ -69,7 +79,7 @@ namespace Jamb.Logging
 			{
 				try
 				{
-					Thread.Sleep(c_logPeriod);
+					Thread.Sleep(m_logPeriod.Get());
 				}
 				catch (ThreadInterruptedException)
 				{
@@ -130,7 +140,7 @@ namespace Jamb.Logging
 
 				DateTime now = DateTime.UtcNow;
 
-				string logFilePath = string.Format("{0}\\{1:yyyy-MM-dd}_{1:H-mm-ss.fff}.log", folderFullPath, now);
+				string logFilePath = string.Format("{0}\\{1}", folderFullPath, string.Format(m_logFileNaming, now));
 				if(File.Exists(logFilePath))
 				{
 					throw new LogFileCreationException("Log file already exists.");

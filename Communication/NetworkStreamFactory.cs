@@ -10,7 +10,7 @@ namespace Jamb.Communication
 	/// <summary>
 	/// Creates NetworkStreams by using TcpListener, Socket, NetworkStream and WrappedNetworkStream.
 	/// </summary>
-	class NetworkStreamFactory
+	internal class NetworkStreamFactory
 	{
 		/// <summary>
 		/// Creates a TcpListener and waits for a connection. First connecting client is used to construct MessagePasser.

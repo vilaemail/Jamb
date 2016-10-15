@@ -58,5 +58,23 @@ namespace Jamb.Properties {
                 return ((string)(this["CrashFileNameFormat"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10240")]
+        public int CommunicationMaxMessageSizeInB {
+            get {
+                return ((int)(this["CommunicationMaxMessageSizeInB"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("500")]
+        public int CommunicationBackoffInMs {
+            get {
+                return ((int)(this["CommunicationBackoffInMs"]));
+            }
+        }
     }
 }

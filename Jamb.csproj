@@ -70,6 +70,10 @@
     <Compile Include="Common\NetworkHelper.cs" />
     <Compile Include="Common\TaskHelper.cs" />
     <Compile Include="Communication\CommunicationException.cs" />
+    <Compile Include="Communication\Connection.cs" />
+    <Compile Include="Communication\CommunicatorSettings.cs" />
+    <Compile Include="Communication\ConnectionState.cs" />
+    <Compile Include="Communication\Communicator.cs" />
     <Compile Include="Communication\NetworkStreamFactory.cs" />
     <Compile Include="Communication\MalformedMessageException.cs" />
     <Compile Include="Communication\TimeoutException.cs" />

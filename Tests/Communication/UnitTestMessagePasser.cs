@@ -32,7 +32,7 @@ namespace JambTests.Communication
 		public void SendMessage_UnexpectedNetworkStreamException_ExceptionThrown()
 		{
 			Mock<INetworkStream> mockStream = new Mock<INetworkStream>(MockBehavior.Strict);
-			mockStream.Setup(obj => obj.Write(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>())).Throws(new ApplicationException("Unit test exception"));
+			mockStream.Setup(obj => obj.Write(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Throws(new ApplicationException("Unit test exception"));
 			MessagePasser underTest = ConstructWithDefaultSettings(mockStream.Object);
 
 			AssertHelper.AssertExceptionHappened(() => underTest.SendMessage(CreateNormalMessage(10), new CancellationToken()), typeof(UnknownCommunicationException), "We should throw on unexpected exception");
@@ -67,7 +67,7 @@ namespace JambTests.Communication
 				byte[] sentData = writeBuffer.WrittenData;
 				Assert.AreEqual(expectedSize, sentData.Length, "We should have sent expected amount of data");
 				AssertHeader(expectedHeader, sentData);
-				mockStream.Verify(obj => obj.Write(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()), Times.Exactly(1));
+				mockStream.Verify(obj => obj.Write(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Exactly(1));
 			});
 		}
 
@@ -90,7 +90,7 @@ namespace JambTests.Communication
 			underTest.SendMessage(CreateNormalMessage(10), new CancellationToken());
 
 			// Assert that message was sent
-			mockStream.Verify(obj => obj.Write(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()), Times.Exactly(2));
+			mockStream.Verify(obj => obj.Write(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
 
 			byte[] sentData = writeBuffer.WrittenData;
 			// Assert
@@ -210,7 +210,7 @@ namespace JambTests.Communication
 		private static Mock<INetworkStream> SetupWriteOnlyNetworkStream(WriteNetworkStreamBuffer writeBuffer)
 		{
 			Mock<INetworkStream> mockStream = new Mock<INetworkStream>(MockBehavior.Strict);
-			mockStream.Setup(obj => obj.Write(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>())).Callback<byte[], int, int>((buffer, offset, size) =>
+			mockStream.Setup(obj => obj.Write(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Callback<byte[], int, int, CancellationToken>((buffer, offset, size, token) =>
 			{
 				writeBuffer.Write(buffer.Skip(offset).Take(size).ToArray<byte>());
 			});

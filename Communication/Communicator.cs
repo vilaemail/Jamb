@@ -10,7 +10,8 @@ using System.Threading;
 namespace Jamb.Communication
 {
 	/// <summary>
-	/// 
+	/// Used for communication with another instance of this class on a remote computer.
+	/// Exposes the state of underlying connection which is managed by Communication subsystem.
 	/// </summary>
 	public class Communicator : IDisposable
 	{
@@ -23,11 +24,17 @@ namespace Jamb.Communication
 		private CancellationTokenSource m_receiveThreadCanceler;
 
 		private BlockingCollection<Message> m_messagesForSending = new BlockingCollection<Message>(new ConcurrentQueue<Message>());
-		private Queue<Message> m_sentMessages; //TODO: expose
-		private Queue<Message> m_receivedMessages; //TODO: expose
+		private Queue<Message> m_sentMessages;
+		private Queue<Message> m_receivedMessages;
 
+		/// <summary>
+		/// The state of underlying connection.
+		/// </summary>
 		public ConnectionState State => m_connection.State;
 
+		/// <summary>
+		/// Event fired when a message is received
+		/// </summary>
 		public event EventHandler<MessageReceivedEventData> MessageReceivedEvent;
 
 		/// <summary>
@@ -99,29 +106,9 @@ namespace Jamb.Communication
 			{
 				try
 				{
-					// Get message from queue to send. Make sure we timeout for sending a ping signal
 					if (messageToSend == null)
 					{
-						if (m_messagesForSending.Any())
-						{
-							messageToSend = m_messagesForSending.Take(myCancelationToken);
-						}
-						else
-						{
-							// If we should have already sent a ping -> do so
-							long timeout = m_settings.SecondsSinceLastSentMessageForPing.Get() * 1000 - timeSinceLastMessage.ElapsedMilliseconds;
-							if (timeout <= 0)
-							{
-								messageToSend = new PingMessage();
-							}
-							else
-							{
-								// If we shouldn't have sent a ping yet block for a new message
-								CancellationTokenSource cancelationTokenSourceWithTimeout = CancellationTokenSource.CreateLinkedTokenSource(myCancelationToken);
-								cancelationTokenSourceWithTimeout.CancelAfter((int)timeout);
-								messageToSend = m_messagesForSending.Take(cancelationTokenSourceWithTimeout.Token);
-							}
-						}
+						messageToSend = GetMessageToSend(myCancelationToken, timeSinceLastMessage.ElapsedMilliseconds);
 					}
 
 					// Send message (this could fail)
@@ -133,7 +120,7 @@ namespace Jamb.Communication
 				}
 				catch(OperationCanceledException e)
 				{
-					// We are being canceled
+					// We are being canceled or we timedout
 					Logger.Instance.Log(LogLevel.Info, "OperationCanceledException when sending", e);
 				}
 				catch(CommunicationException e)
@@ -142,6 +129,39 @@ namespace Jamb.Communication
 					Logger.Instance.Log(LogLevel.Warning, "CommunicationException when sending", e);
 				}
 			}
+		}
+
+		/// <summary>
+		/// Gets the next message to be sent.
+		/// If there is no message in queue and we haven't sent anything in a while a ping message is returned.
+		/// If there is no message in queue and we have sent a message in the expected timeframe blocks to get a message from queue. Block is canceled when we need to send a ping message.
+		/// </summary>
+		private Message GetMessageToSend(CancellationToken token, long millisecondsSinceLastSentMessage)
+		{
+			Message messageToSend;
+
+			if (m_messagesForSending.Any())
+			{
+				messageToSend = m_messagesForSending.Take(token);
+			}
+			else
+			{
+				// If we should have already sent a ping -> do so
+				long timeout = m_settings.SecondsSinceLastSentMessageForPing.Get() * 1000 - millisecondsSinceLastSentMessage;
+				if (timeout <= 0)
+				{
+					messageToSend = new PingMessage();
+				}
+				else
+				{
+					// If we shouldn't have sent a ping yet block for a new message
+					CancellationTokenSource cancelationTokenSourceWithTimeout = CancellationTokenSource.CreateLinkedTokenSource(token);
+					cancelationTokenSourceWithTimeout.CancelAfter((int)timeout);
+					messageToSend = m_messagesForSending.Take(cancelationTokenSourceWithTimeout.Token);
+				}
+			}
+
+			return messageToSend;
 		}
 
 		/// <summary>

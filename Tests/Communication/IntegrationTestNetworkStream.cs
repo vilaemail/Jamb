@@ -1,17 +1,13 @@
 ﻿using Jamb.Common;
 using Jamb.Communication;
-using Jamb.Communication.WireProtocol;
 using JambTests.Assertion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
-using System.Runtime.Serialization.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,6 +23,17 @@ namespace JambTests.Communication
 	public class IntegrationTestNetworkStream
 	{
 		private static readonly byte[] dummyMessage = { 1, 2, 3, 4, 5 };
+
+		private CancellationToken m_cancelToken;
+
+		[TestInitialize]
+		public void SetupCancellationToken()
+		{
+			// Make sure all our blocking actions finish eventually
+			CancellationTokenSource cts = new CancellationTokenSource();
+			cts.CancelAfter(10000);
+			m_cancelToken = cts.Token;
+		}
 
 		[TestCategory("Integration"), TestCategory("Longrunning"), TestMethod]
 		public void BasicServerClient_ServerAndClientExchangeOneMessageAndCloseConnection_MessagesIntactGracefullExit()
@@ -44,7 +51,7 @@ namespace JambTests.Communication
 				Assert.IsFalse(clientStream.DataAvailable, "We shouldn't have any data if we haven't sent anything");
 
 				// Send one message as server, receive it as client and check it is preserved.
-				serverStream.Write(dummyMessage, 0, dummyMessage.Length);
+				serverStream.Write(dummyMessage, 0, dummyMessage.Length, m_cancelToken);
 				Thread.Sleep(100);
 				Assert.IsFalse(serverStream.DataAvailable, "We shouldn't have any data if we haven't sent anything");
 				Assert.IsTrue(clientStream.DataAvailable, "We should have data because we have sent it");
@@ -62,8 +69,8 @@ namespace JambTests.Communication
 				}
 
 				// Send messages at the same time from both sides
-				serverStream.Write(dummyMessage, 0, dummyMessage.Length);
-				clientStream.Write(dummyMessage, 0, dummyMessage.Length);
+				serverStream.Write(dummyMessage, 0, dummyMessage.Length, m_cancelToken);
+				clientStream.Write(dummyMessage, 0, dummyMessage.Length, m_cancelToken);
 				Thread.Sleep(100);
 				Assert.IsTrue(serverStream.DataAvailable, "We should have data because we have sent it");
 				Assert.IsTrue(clientStream.DataAvailable, "We should have data because we have sent it");
@@ -108,7 +115,7 @@ namespace JambTests.Communication
 
 				// Send one message as server and close connection.
 				// Receive it as client and check it is preserved.
-				serverStream.Write(dummyMessage, 0, dummyMessage.Length);
+				serverStream.Write(dummyMessage, 0, dummyMessage.Length, m_cancelToken);
 				serverStream.Dispose();
 				Thread.Sleep(100);
 				Assert.IsTrue(clientStream.DataAvailable, "We should have data because we have sent it");
@@ -125,7 +132,7 @@ namespace JambTests.Communication
 				// Make sure reads and writes behave as expected. Nothing to read and write passes as if everything is ok.
 				readBytes = clientStream.Read(buffer, 0, dummyMessage.Length);
 				Assert.AreEqual(0, readBytes, "We shouldn't read anything when connection is closed on other side");
-				clientStream.Write(dummyMessage, 0, dummyMessage.Length);
+				clientStream.Write(dummyMessage, 0, dummyMessage.Length, m_cancelToken);
 			}
 			finally
 			{
@@ -162,12 +169,13 @@ namespace JambTests.Communication
 			}
 		}
 
-		internal static Tuple<INetworkStream, INetworkStream> GetServerAndClientStream()
+		internal Tuple<INetworkStream, INetworkStream> GetServerAndClientStream()
 		{
-			// Make sure all our blocking actions finish eventually
-			CancellationTokenSource cts = new CancellationTokenSource();
-			cts.CancelAfter(10000);
+			return GetServerAndClientStream(m_cancelToken);
+		}
 
+		internal static Tuple<INetworkStream, INetworkStream> GetServerAndClientStream(CancellationToken token)
+		{
 			// Get IP address so that we can create sockets
 			List<IPAddress> addresses = NetworkHelper.GetLocalIPv4Addresses();
 			Assert.IsTrue(addresses.Count > 0, "We must have network available for this test to work");
@@ -177,8 +185,8 @@ namespace JambTests.Communication
 			var factory = new NetworkStreamFactory();
 
 			// Try to establish connection
-			Task<INetworkStream> serverStreamTask = Task.Run(() => factory.InstantiateForServer(myIp, 4959, cts.Token));
-			Task<INetworkStream> clientStreamTask = Task.Run(() => factory.InstantiateForClient(myIp, 4959, cts.Token));
+			Task<INetworkStream> serverStreamTask = Task.Run(() => factory.InstantiateForServer(myIp, 4959, token));
+			Task<INetworkStream> clientStreamTask = Task.Run(() => factory.InstantiateForClient(myIp, 4959, token));
 			Task.WhenAll(serverStreamTask, clientStreamTask).WaitAndThrowActualException();
 
 			// Get the streams

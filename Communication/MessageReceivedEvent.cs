@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Jamb.Communication.WireProtocol;
 
 namespace Jamb.Communication
 {

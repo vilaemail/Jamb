@@ -34,7 +34,7 @@ namespace JambTests.Communication
 			cts.CancelAfter(10000);
 
 			// Get server and client message passers
-			var serverAndClient = GetServerAndClientMessagePasser();
+			var serverAndClient = GetServerAndClientMessagePasser(cts.Token);
 			var server = serverAndClient.Item1;
 			var client = serverAndClient.Item2;
 
@@ -61,7 +61,7 @@ namespace JambTests.Communication
 			cts.CancelAfter(10000);
 
 			// Get server and client message passers
-			var serverAndClient = GetServerAndClientMessagePasser();
+			var serverAndClient = GetServerAndClientMessagePasser(cts.Token);
 			var server = serverAndClient.Item1;
 			var client = serverAndClient.Item2;
 
@@ -91,7 +91,7 @@ namespace JambTests.Communication
 			cts.CancelAfter(10000);
 
 			// Get server and client message passers
-			var serverAndClient = GetServerAndClientMessagePasser();
+			var serverAndClient = GetServerAndClientMessagePasser(cts.Token);
 			var server = serverAndClient.Item1;
 			var client = serverAndClient.Item2;
 
@@ -135,9 +135,9 @@ namespace JambTests.Communication
 			}
 		}
 
-		internal static Tuple<MessagePasser, MessagePasser> GetServerAndClientMessagePasser()
+		internal static Tuple<MessagePasser, MessagePasser> GetServerAndClientMessagePasser(CancellationToken token)
 		{
-			var serverAndClientStream = IntegrationTestNetworkStream.GetServerAndClientStream();
+			var serverAndClientStream = IntegrationTestNetworkStream.GetServerAndClientStream(token);
 
 			var serverStream = serverAndClientStream.Item1;
 			var clientStream = serverAndClientStream.Item2;

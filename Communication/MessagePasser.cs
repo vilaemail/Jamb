@@ -131,9 +131,9 @@ namespace Jamb.Communication
 
 			byte[] messageHeader = ConstructMessageHeader(bytesToSend);
 			// Send the bytes
-			m_stream.Write(messageHeader, 0, messageHeader.Length);
+			m_stream.Write(messageHeader, 0, messageHeader.Length, cancelToken);
 			ThrowIfWeShouldCancel(cancelToken, "Cancelation request detected in SendBytes.");
-			m_stream.Write(bytesToSend, 0, bytesToSend.Length);
+			m_stream.Write(bytesToSend, 0, bytesToSend.Length, cancelToken);
 		}
 
 		/// <summary>

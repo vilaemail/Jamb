@@ -16,8 +16,8 @@ namespace Jamb.Communication
 	public class Communicator : IDisposable
 	{
 		private readonly CommunicatorSettings m_settings;
-		internal readonly Connection m_connection;
-
+		private readonly Connection m_connection;
+		
 		private Thread m_sendThread;
 		private Thread m_receiveThread;
 		private CancellationTokenSource m_sendThreadCanceler;
@@ -38,16 +38,16 @@ namespace Jamb.Communication
 		public event EventHandler<MessageReceivedEventData> MessageReceivedEvent;
 
 		/// <summary>
-		/// Constructs an instance with the given settings. It has an underlying connection which it owns.
+		/// Constructs an instance with the given settings and connection. It owns the lifetime of connection.
 		/// However the connection should be (re)established by ConnectionManager who is responsible for maintaining/making the connection functional.
 		/// </summary>
-		internal Communicator(CommunicatorSettings settings)
+		internal Communicator(CommunicatorSettings settings, Connection connection)
 		{
 			Debug.Assert(settings != null);
+			Debug.Assert(connection != null);
 
 			m_settings = settings;
-
-			m_connection = new Connection();
+			m_connection = connection;
 
 			m_sendThread = new Thread(SenderThread);
 			m_receiveThread = new Thread(ReceiverThread);

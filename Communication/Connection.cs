@@ -1,20 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Jamb.Communication.WireProtocol;
-using System.Net.Sockets;
 using System.Threading;
-using System.Diagnostics;
-using System.Runtime.Serialization.Json;
-using System.IO;
-using System.Runtime.Serialization;
-using Jamb.Values;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 
 namespace Jamb.Communication
 {
 	/// <summary>
-	/// 
+	/// Owns message passer and its state. Changes the state if it detects a change.
+	/// Connection can be reestablished with new MessagePasser through Reopen method by ConnectionManager.
 	/// </summary>
 	internal class Connection : IDisposable
 	{
@@ -22,16 +15,18 @@ namespace Jamb.Communication
 		private MessagePasser m_messagePasser = null;
 		private Mutex m_sendMutex = new Mutex(false);
 		private Mutex m_receiveMutex = new Mutex(false);
+		private ManualResetEventSlim m_sendConnectionReopenedEvent = new ManualResetEventSlim(false);
+		private ManualResetEventSlim m_receiveConnectionReopenedEvent = new ManualResetEventSlim(false);
 
 		internal ConnectionState State => m_state;
 
-		/// <summary>
-		/// 
-		/// </summary>
 		internal Connection()
 		{
 		}
 
+		/// <summary>
+		/// Changes the state of connection given the knowledge that connection is lost.
+		/// </summary>
 		internal void MarkAsLost()
 		{
 			switch (m_state)
@@ -50,7 +45,6 @@ namespace Jamb.Communication
 				default:
 					throw new InvalidOperationException("Unexpected internal state: " + m_state.ToString());
 			}
-
 		}
 
 		/// <summary>
@@ -83,6 +77,9 @@ namespace Jamb.Communication
 			ChangeStateToClosed();
 		}
 
+		/// <summary>
+		/// Changes state to closed and disposes of underlying message passer.
+		/// </summary>
 		private void ChangeStateToClosed()
 		{
 			m_state = ConnectionState.Closed;
@@ -97,6 +94,9 @@ namespace Jamb.Communication
 			});
 		}
 
+		/// <summary>
+		/// Reopens a lost connection by disposing of current message passer and marking a connection as opened with a new one.
+		/// </summary>
 		internal void Reopen(MessagePasser messagePasser)
 		{
 			using (new Releaser(m_sendMutex))
@@ -112,6 +112,8 @@ namespace Jamb.Communication
 				m_messagePasser = messagePasser;
 				m_state = ConnectionState.Open;
 			}
+			m_sendConnectionReopenedEvent.Set();
+			m_receiveConnectionReopenedEvent.Set();
 		}
 
 		/// <summary>
@@ -123,32 +125,62 @@ namespace Jamb.Communication
 		}
 
 		/// <summary>
-		/// 
+		/// Sends a message.
+		/// Throws ConnectionStateException if we don't support sending.
+		/// Blocks to wait a state change if connection is broken, but repairable.
+		/// Blocks to send a message.
+		/// Throws a OperationCanceledException if it timesout or operation is canceled.
 		/// </summary>
-		/// <param name="messageToSend"></param>
-		/// <param name="cancellationToken"></param>
 		internal void SendMessage(Message messageToSend, CancellationToken cancellationToken)
+		{
+			// Loop until we send or throw
+			while (true)
+			{
+				// Make sure we can send
+				WaitUntilSendingIsPossible(cancellationToken);
+
+				using (new Releaser(m_sendMutex))
+				{
+					// Once we have a lock make sure we can still send
+					if (IsSendingPossible())
+					{
+						// send
+						ExecuteAndMarkAsLostOnException(() => m_messagePasser.SendMessage(messageToSend, cancellationToken));
+						return;
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// Returns when sending is possible. Otherwise throws an exception.
+		/// </summary>
+		private void WaitUntilSendingIsPossible(CancellationToken token)
 		{
 			bool readyForSending = false;
 			do
 			{
+				m_sendConnectionReopenedEvent.Reset();
 				if (!SupportsSending())
 				{
 					throw new ConnectionStateException("Can't send on closed connection");
 				}
 				if (m_state == ConnectionState.Lost)
 				{
-					// wait for state change and retest
-					readyForSending = true;
+					m_sendConnectionReopenedEvent.Wait(token);
+					continue;
 				}
+				readyForSending = true;
 			}
 			while (!readyForSending);
+		}
 
-			using (new Releaser(m_sendMutex))
-			{
-				// send
-				ExecuteAndMarkAsLostOnException(() => m_messagePasser.SendMessage(messageToSend, cancellationToken));
-			}
+		/// <summary>
+		/// Can we send at this moment?
+		/// </summary>
+		private bool IsSendingPossible()
+		{
+			return SupportsSending() && m_state != ConnectionState.Lost;
 		}
 
 		/// <summary>
@@ -184,9 +216,33 @@ namespace Jamb.Communication
 		/// </summary>
 		internal Message ReceiveMessage(CancellationToken cancellationToken)
 		{
+			// Loop until we receive or throw
+			while (true)
+			{
+				// Make sure we can receive
+				WaitUntilReceivingIsPossible(cancellationToken);
+
+				using (new Releaser(m_receiveMutex))
+				{
+					// Once we have a lock make sure we can still receive
+					if (IsReceivingPossible())
+					{
+						// receive
+						return ExecuteAndMarkAsLostOnException(() => m_messagePasser.ReceiveMessage(cancellationToken));
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// Returns when receiving is possible. Otherwise throws an exception.
+		/// </summary>
+		private void WaitUntilReceivingIsPossible(CancellationToken token)
+		{
 			bool readyForReceiving = false;
 			do
 			{
+				m_receiveConnectionReopenedEvent.Reset();
 				if (!SupportsReceiving())
 				{
 					throw new ConnectionStateException("Can't receive on connection that is closing or is closed");
@@ -194,17 +250,20 @@ namespace Jamb.Communication
 
 				if (m_state == ConnectionState.Lost)
 				{
-					// wait for state change and retest
+					m_receiveConnectionReopenedEvent.Wait(token);
 					continue;
 				}
 
 				readyForReceiving = true;
 			} while (!readyForReceiving);
+		}
 
-			using (new Releaser(m_receiveMutex))
-			{
-				return ExecuteAndMarkAsLostOnException(() => m_messagePasser.ReceiveMessage(cancellationToken));
-			}
+		/// <summary>
+		/// Can we receive at this moment?
+		/// </summary>
+		private bool IsReceivingPossible()
+		{
+			return SupportsReceiving() && m_state != ConnectionState.Lost;
 		}
 
 		/// <summary>

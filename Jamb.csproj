@@ -74,9 +74,12 @@
     <Compile Include="Communication\CommunicatorSettings.cs" />
     <Compile Include="Communication\ConnectionState.cs" />
     <Compile Include="Communication\Communicator.cs" />
+    <Compile Include="Communication\MessageReceivedEvent.cs" />
+    <Compile Include="Communication\ConnectionStateException.cs" />
     <Compile Include="Communication\NetworkStreamFactory.cs" />
     <Compile Include="Communication\MalformedMessageException.cs" />
     <Compile Include="Communication\TimeoutException.cs" />
+    <Compile Include="Communication\WireProtocol\PingMessage.cs" />
     <Compile Include="Communication\WireProtocol\UnitTestMessage.cs" />
     <Compile Include="Communication\WrappedNetworkStream.cs" />
     <Compile Include="Communication\INetworkStream.cs" />

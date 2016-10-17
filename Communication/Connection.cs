@@ -43,7 +43,7 @@ namespace Jamb.Communication
 					break;
 				case ConnectionState.Closing:
 					// Close since we lost connection there is no point in trying to send anything
-					m_state = ConnectionState.Closed;
+					ChangeStateToClosed();
 					break;
 				case ConnectionState.Closed:
 					break;
@@ -53,7 +53,10 @@ namespace Jamb.Communication
 
 		}
 
-		internal void MarkAsClosing()
+		/// <summary>
+		/// Marks connection to be closed. Tries to send remaining messages.
+		/// </summary>
+		internal void BeginClosing()
 		{
 			switch(m_state)
 			{
@@ -62,7 +65,7 @@ namespace Jamb.Communication
 					break;
 				case ConnectionState.Lost:
 					// Close since we lost connection there is no point in trying to send anything
-					m_state = ConnectionState.Closed;
+					ChangeStateToClosed();
 					break;
 				case ConnectionState.Closing:
 				case ConnectionState.Closed:
@@ -72,9 +75,26 @@ namespace Jamb.Communication
 			}
 		}
 
-		internal void MarkAsClosed()
+		/// <summary>
+		/// Closes the connection without trying to send any more messages
+		/// </summary>
+		internal void Terminate()
+		{
+			ChangeStateToClosed();
+		}
+
+		private void ChangeStateToClosed()
 		{
 			m_state = ConnectionState.Closed;
+			Task.Factory.StartNew(() =>
+			{
+				using (new Releaser(m_sendMutex))
+				using (new Releaser(m_receiveMutex))
+				{
+					m_messagePasser?.Dispose();
+					m_messagePasser = null;
+				}
+			});
 		}
 
 		internal void Reopen(MessagePasser messagePasser)
@@ -94,43 +114,135 @@ namespace Jamb.Communication
 			}
 		}
 
+		/// <summary>
+		/// Once this method returns false it will always return false. The connection will never support sending again because it is closed.
+		/// </summary>
+		internal bool SupportsSending()
+		{
+			return m_state != ConnectionState.Closed;
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="messageToSend"></param>
+		/// <param name="cancellationToken"></param>
 		internal void SendMessage(Message messageToSend, CancellationToken cancellationToken)
 		{
-			if(m_state == ConnectionState.Closed)
+			bool readyForSending = false;
+			do
 			{
-				// stop sending now
+				if (!SupportsSending())
+				{
+					throw new ConnectionStateException("Can't send on closed connection");
+				}
+				if (m_state == ConnectionState.Lost)
+				{
+					// wait for state change and retest
+					readyForSending = true;
+				}
 			}
-			if(m_state == ConnectionState.Lost)
-			{
-				// wait for state change and retest
-			}
+			while (!readyForSending);
+
 			using (new Releaser(m_sendMutex))
 			{
 				// send
-				m_messagePasser.SendMessage(messageToSend, cancellationToken);
+				ExecuteAndMarkAsLostOnException(() => m_messagePasser.SendMessage(messageToSend, cancellationToken));
 			}
 		}
 
+		/// <summary>
+		/// Once this method returns false it will always return false. The connection will never support receiving again because it is either closed or is in progress of being closed.
+		/// </summary>
+		internal bool SupportsReceiving()
+		{
+			return m_state != ConnectionState.Closed && m_state != ConnectionState.Closing;
+		}
+
+		/// <summary>
+		/// Receives a message.
+		/// Throws ConnectionStateException if we don't support receiving.
+		/// Blocks to wait a state change if connection is broken, but repairable.
+		/// Blocks to receive a message.
+		/// Throws a OperationCanceledException if it timesout or operation is canceled.
+		/// </summary>
+		internal Message ReceiveMessage(CancellationToken cancellationToken, int timeoutInMs)
+		{
+			// Setup new cancelation token with given timeout
+			CancellationTokenSource cancelationTokenSourceWithTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+			cancelationTokenSourceWithTimeout.CancelAfter(timeoutInMs * 1000);
+
+			return ReceiveMessage(cancelationTokenSourceWithTimeout.Token);
+		}
+
+		/// <summary>
+		/// Receives a message.
+		/// Throws ConnectionStateException if we don't support receiving.
+		/// Blocks to wait a state change if connection is broken, but repairable.
+		/// Blocks to receive a message.
+		/// Throws a OperationCanceledException if operation is canceled.
+		/// </summary>
 		internal Message ReceiveMessage(CancellationToken cancellationToken)
 		{
-			if (m_state == ConnectionState.Closed || m_state == ConnectionState.Closing)
+			bool readyForReceiving = false;
+			do
 			{
-				// stop receiving now
-			}
-			if (m_state == ConnectionState.Lost)
-			{
-				// wait for state change and retest
-			}
+				if (!SupportsReceiving())
+				{
+					throw new ConnectionStateException("Can't receive on connection that is closing or is closed");
+				}
+
+				if (m_state == ConnectionState.Lost)
+				{
+					// wait for state change and retest
+					continue;
+				}
+
+				readyForReceiving = true;
+			} while (!readyForReceiving);
+
 			using (new Releaser(m_receiveMutex))
 			{
-				// receive
-				// Receive message with a timeout
-				CancellationTokenSource messagePasserCancelationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-				messagePasserCancelationTokenSource.CancelAfter(m_settings.SecondsSinceLastMessageForTimeout.Get() * 1000);
-				return m_messagePasser.ReceiveMessage(messagePasserCancelationTokenSource.Token);
+				return ExecuteAndMarkAsLostOnException(() => m_messagePasser.ReceiveMessage(cancellationToken));
 			}
 		}
 
+		/// <summary>
+		/// Executes given function. Any exception is caught, state is marked as Lost and exception is rethrown.
+		/// </summary>
+		private void ExecuteAndMarkAsLostOnException(Action func)
+		{
+			try
+			{
+				func();
+			}
+			catch(Exception)
+			{
+				MarkAsLost();
+				throw;
+			}
+		}
+
+		/// <summary>
+		/// Executes given function. Any exception is caught, state is marked as Lost and exception is rethrown.
+		/// If func is successful returns its return value.
+		/// </summary>
+		private T ExecuteAndMarkAsLostOnException<T>(Func<T> func)
+		{
+			try
+			{
+				return func();
+			}
+			catch (Exception)
+			{
+				MarkAsLost();
+				throw;
+			}
+		}
+
+		/// <summary>
+		/// Helper class for acquiring and releasing a Mutex
+		/// </summary>
 		private class Releaser : IDisposable
 		{
 			Mutex m_s;
@@ -146,6 +258,9 @@ namespace Jamb.Communication
 			}
 		}
 
+		/// <summary>
+		/// Disposes of underlying connection.
+		/// </summary>
 		public void Dispose()
 		{
 			m_messagePasser?.Dispose();

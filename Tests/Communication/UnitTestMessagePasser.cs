@@ -61,7 +61,7 @@ namespace JambTests.Communication
 				// Send the message
 				CancellationTokenSource cts = new CancellationTokenSource();
 				cts.CancelAfter(TimeSpan.FromMilliseconds(250));
-				AssertHelper.AssertExceptionHappened(() => underTest.SendMessage(CreateNormalMessage(10), cts.Token), typeof(TaskCanceledException), "We should raise exception when we are canceled");
+				AssertHelper.AssertExceptionHappened(() => underTest.SendMessage(CreateNormalMessage(10), cts.Token), typeof(OperationCanceledException), "We should raise exception when we are canceled");
 
 				// Assert we only sent header
 				byte[] sentData = writeBuffer.WrittenData;
@@ -181,7 +181,7 @@ namespace JambTests.Communication
 
 			CancellationTokenSource cts = new CancellationTokenSource();
 			cts.CancelAfter(250);
-			AssertHelper.AssertExceptionHappened(() => underTest.ReceiveMessage(cts.Token), typeof(TaskCanceledException), "We should throw when cancelation is requested");
+			AssertHelper.AssertExceptionHappened(() => underTest.ReceiveMessage(cts.Token), typeof(OperationCanceledException), "We should throw when cancelation is requested");
 			mockStream.Verify(obj => obj.Read(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()), Times.Exactly(1));
 			Assert.AreEqual(message.Length - 5, readBuffer.RemainingBytes, "We should have read only header");
 		}

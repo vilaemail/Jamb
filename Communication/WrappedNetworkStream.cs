@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace Jamb.Communication
 {
@@ -31,9 +32,9 @@ namespace Jamb.Communication
 			return m_networkStream.Read(buffer, offset, size);
 		}
 
-		public void Write(byte[] buffer, int offset, int size)
+		public void Write(byte[] buffer, int offset, int size, CancellationToken token)
 		{
-			m_networkStream.Write(buffer, offset, size);
+			m_networkStream.WriteAsync(buffer, offset, size).Wait(token);
 			m_networkStream.Flush();
 		}
 	}

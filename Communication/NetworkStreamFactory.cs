@@ -14,7 +14,7 @@ namespace Jamb.Communication
 	{
 		/// <summary>
 		/// Creates a TcpListener and waits for a connection. First connecting client is used to construct MessagePasser.
-		/// Throws TaskCanceledException on cancelation, otherwise CommunicationException.
+		/// Throws OperationCanceledException on cancelation, otherwise CommunicationException.
 		/// </summary>
 		/// <param name="ip">Ip of the server (or selves) on which we will listen for connections.</param>
 		/// <param name="port">Port on which we will listen to connections</param>
@@ -52,7 +52,7 @@ namespace Jamb.Communication
 				}
 
 				// Rethrow if canceled
-				if (e is TaskCanceledException)
+				if (e is OperationCanceledException)
 				{
 					throw;
 				}
@@ -68,7 +68,7 @@ namespace Jamb.Communication
 
 		/// <summary>
 		/// Tries to connect to the given server. If successful creates MessagePasser that can be used to communicate with the server.
-		/// Throws TaskCanceledException on cancelation, otherwise UnknownCommunicationException. 
+		/// Throws OperationCanceledException on cancelation, otherwise UnknownCommunicationException. 
 		/// </summary>
 		/// <param name="ip">Ip address of the server to which we will try to connect.</param>
 		/// <param name="port">Port on the server we should target</param>
@@ -101,7 +101,7 @@ namespace Jamb.Communication
 				}
 
 				// Rethrow if canceled
-				if (e is TaskCanceledException)
+				if (e is OperationCanceledException)
 				{
 					throw;
 				}

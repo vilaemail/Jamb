@@ -43,7 +43,7 @@ namespace Jamb.Communication
 
 		/// <summary>
 		/// Synchronously tries to send a message.
-		/// Throws TaskCanceledException on cancelation, otherwise CommunicationException.
+		/// Throws OperationCanceledException on cancelation, otherwise CommunicationException.
 		/// </summary>
 		public void SendMessage(Message messageToSend, CancellationToken cancelToken)
 		{
@@ -57,7 +57,7 @@ namespace Jamb.Communication
 				byte[] dataToBeSent = SerializeMessage(messageToSend);
 				SendBytes(dataToBeSent, cancelToken);
 			}
-			catch (Exception e) when (!(e is CommunicationException || e is TaskCanceledException)) // Only wrap unexpected exceptions
+			catch (Exception e) when (!(e is CommunicationException || e is OperationCanceledException)) // Only wrap unexpected exceptions
 			{
 				throw new UnknownCommunicationException("Exception occured while trying to send a message", e);
 			}
@@ -65,7 +65,7 @@ namespace Jamb.Communication
 
 		/// <summary>
 		/// Synchronously tries to receive a message.
-		/// Throws TaskCanceledException on cancelation, otherwise CommunicationException.
+		/// Throws OperationCanceledException on cancelation, otherwise CommunicationException.
 		/// </summary>
 		public Message ReceiveMessage(CancellationToken cancelToken)
 		{
@@ -84,7 +84,7 @@ namespace Jamb.Communication
 			{
 				throw new MalformedMessageException("Failed to deserialize received message", e);
 			}
-			catch (Exception e) when (!(e is CommunicationException || e is TaskCanceledException)) // Only wrap unexpected exceptions
+			catch (Exception e) when (!(e is CommunicationException || e is OperationCanceledException)) // Only wrap unexpected exceptions
 			{
 				throw new UnknownCommunicationException("Exception occured while trying to receive message", e);
 			}
@@ -218,13 +218,13 @@ namespace Jamb.Communication
 		}
 
 		/// <summary>
-		/// Tests the token if cancelation is requested. If it is throws TaskCanceledException with the given message
+		/// Tests the token if cancelation is requested. If it is throws OperationCanceledException with the given message
 		/// </summary>
 		private static void ThrowIfWeShouldCancel(CancellationToken cancelToken, string exceptionMessage)
 		{
 			if (cancelToken.IsCancellationRequested)
 			{
-				throw new TaskCanceledException(exceptionMessage);
+				throw new OperationCanceledException(exceptionMessage);
 			}
 		}
 

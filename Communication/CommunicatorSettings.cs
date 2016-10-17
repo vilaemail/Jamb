@@ -8,7 +8,7 @@ namespace Jamb.Communication
 		public CommunicatorSettings(IValue<int> pastMessagesToKeep,
 			IValue<int> messagesInQueueForTimeout,
 			IValue<int> secondsSinceLastMessageForTimeout,
-			IValue<int> secondsSinceLastMessageForPing,
+			IValue<int> secondsSinceLastSentMessageForPing,
 			IValue<int> secondsToWaitClosingBeforeTerminating)
 		{
 			if(pastMessagesToKeep == null)
@@ -23,9 +23,9 @@ namespace Jamb.Communication
 			{
 				throw new ArgumentNullException(nameof(secondsSinceLastMessageForTimeout));
 			}
-			if (secondsSinceLastMessageForPing == null)
+			if (secondsSinceLastSentMessageForPing == null)
 			{
-				throw new ArgumentNullException(nameof(secondsSinceLastMessageForPing));
+				throw new ArgumentNullException(nameof(secondsSinceLastSentMessageForPing));
 			}
 			if (secondsToWaitClosingBeforeTerminating == null)
 			{
@@ -35,14 +35,14 @@ namespace Jamb.Communication
 			PastMessagesToKeep = pastMessagesToKeep;
 			MessagesInQueueForTimeout = messagesInQueueForTimeout;
 			SecondsSinceLastMessageForTimeout = secondsSinceLastMessageForTimeout;
-			SecondsSinceLastMessageForPing = secondsSinceLastMessageForPing;
+			SecondsSinceLastSentMessageForPing = secondsSinceLastSentMessageForPing;
 			SecondsToWaitClosingBeforeTerminating = secondsToWaitClosingBeforeTerminating;
 		}
 
 		internal IValue<int> PastMessagesToKeep { get; private set; }
 		internal IValue<int> MessagesInQueueForTimeout { get; private set; }
 		internal IValue<int> SecondsSinceLastMessageForTimeout { get; private set; }
-		internal IValue<int> SecondsSinceLastMessageForPing { get; private set; }
+		internal IValue<int> SecondsSinceLastSentMessageForPing { get; private set; }
 		internal IValue<int> SecondsToWaitClosingBeforeTerminating { get; private set; }
 	}
 }

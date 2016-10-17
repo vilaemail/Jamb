@@ -1,15 +1,11 @@
-﻿using System;
-using System.Threading.Tasks;
-using Jamb.Communication.WireProtocol;
-using System.Net.Sockets;
-using System.Threading;
-using System.Diagnostics;
-using System.Runtime.Serialization.Json;
-using System.IO;
-using System.Runtime.Serialization;
-using Jamb.Values;
+﻿using Jamb.Communication.WireProtocol;
+using Jamb.Logging;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading;
 
 namespace Jamb.Communication
 {
@@ -19,7 +15,7 @@ namespace Jamb.Communication
 	public class Communicator : IDisposable
 	{
 		private readonly CommunicatorSettings m_settings;
-		private readonly Connection m_connection;
+		internal readonly Connection m_connection;
 
 		private Thread m_sendThread;
 		private Thread m_receiveThread;
@@ -31,9 +27,12 @@ namespace Jamb.Communication
 		private Queue<Message> m_receivedMessages; //TODO: expose
 
 		public ConnectionState State => m_connection.State;
-		
+
+		public event EventHandler<MessageReceivedEventData> MessageReceivedEvent;
+
 		/// <summary>
-		/// 
+		/// Constructs an instance with the given settings. It has an underlying connection which it owns.
+		/// However the connection should be (re)established by ConnectionManager who is responsible for maintaining/making the connection functional.
 		/// </summary>
 		internal Communicator(CommunicatorSettings settings)
 		{
@@ -55,57 +54,185 @@ namespace Jamb.Communication
 			m_receiveThread.Start();
 		}
 
+		/// <summary>
+		/// Adds the given message to sending queue.
+		/// </summary>
+		public void QueueForSending(Message message)
+		{
+			m_messagesForSending.Add(message);
+		}
+
+		/// <summary>
+		/// Returns a list of recently received messages in the receiving order.
+		/// </summary>
+		public IList<Message> ReceivedMessages()
+		{
+			lock(m_receivedMessages)
+			{
+				return m_receivedMessages.ToList();
+			}
+		}
+
+		/// <summary>
+		/// Returns a list of recently sent messages in the sending order.
+		/// </summary>
+		public IList<Message> SentMessages()
+		{
+			lock(m_sentMessages)
+			{
+				return m_sentMessages.ToList();
+			}
+		}
+
+		/// <summary>
+		/// This method is executed on a separate thread. Its job is to send messages and remember sent messages.
+		/// </summary>
 		private void SenderThread()
 		{
+			Debug.Assert(m_sendThreadCanceler != null);
+
 			CancellationToken myCancelationToken = m_sendThreadCanceler.Token;
+			Stopwatch timeSinceLastMessage = Stopwatch.StartNew();
 
 			Message messageToSend = null;
-			while (!myCancelationToken.IsCancellationRequested)
+			while (KeepSending(myCancelationToken))
 			{
 				try
 				{
-					// Get message from queue to send
+					// Get message from queue to send. Make sure we timeout for sending a ping signal
 					if (messageToSend == null)
 					{
-						messageToSend = m_messagesForSending.Take(myCancelationToken);
+						if (m_messagesForSending.Any())
+						{
+							messageToSend = m_messagesForSending.Take(myCancelationToken);
+						}
+						else
+						{
+							// If we should have already sent a ping -> do so
+							long timeout = m_settings.SecondsSinceLastSentMessageForPing.Get() * 1000 - timeSinceLastMessage.ElapsedMilliseconds;
+							if (timeout <= 0)
+							{
+								messageToSend = new PingMessage();
+							}
+							else
+							{
+								// If we shouldn't have sent a ping yet block for a new message
+								CancellationTokenSource cancelationTokenSourceWithTimeout = CancellationTokenSource.CreateLinkedTokenSource(myCancelationToken);
+								cancelationTokenSourceWithTimeout.CancelAfter((int)timeout);
+								messageToSend = m_messagesForSending.Take(cancelationTokenSourceWithTimeout.Token);
+							}
+						}
 					}
 
 					// Send message (this could fail)
 					m_connection.SendMessage(messageToSend, myCancelationToken);
 
-					// Make sure we rememeber what we have sent
+					timeSinceLastMessage.Restart();
 					AddPastMessageToCollection(m_sentMessages, messageToSend);
 					messageToSend = null;
 				}
-				catch(OperationCanceledException) //TODO: Migrate to this exception
+				catch(OperationCanceledException e)
 				{
 					// We are being canceled
-					break;
+					Logger.Instance.Log(LogLevel.Info, "OperationCanceledException when sending", e);
 				}
-				catch(CommunicationException)
+				catch(CommunicationException e)
 				{
 					// We failed to send.
-					m_connection.MarkAsLost();
+					Logger.Instance.Log(LogLevel.Warning, "CommunicationException when sending", e);
 				}
 			}
 		}
 
+		/// <summary>
+		/// This method is executed on a separate thread. Its job is to receive messages, notify our subscribers and remember received messages.
+		/// </summary>
 		private void ReceiverThread()
 		{
+			Debug.Assert(m_receiveThreadCanceler != null);
+
 			CancellationToken myCancelationToken = m_receiveThreadCanceler.Token;
-			while (!myCancelationToken.IsCancellationRequested)
+			Stopwatch timeSinceLastMessage = Stopwatch.StartNew();
+
+			while (KeepReceiving(myCancelationToken))
 			{
-				Message receivedMessage = m_connection.ReceiveMessage(myCancelationToken);
+				if(timeSinceLastMessage.ElapsedMilliseconds > m_settings.SecondsSinceLastMessageForTimeout.Get())
+				{
+					m_connection.MarkAsLost();
+				}
 
-				// TODO: Notify about received message
+				try
+				{
+					Message receivedMessage = m_connection.ReceiveMessage(myCancelationToken, m_settings.SecondsSinceLastMessageForTimeout.Get() * 1000);
+					timeSinceLastMessage.Restart();
 
-				// Make sure we remember what we have received
-				AddPastMessageToCollection(m_receivedMessages, receivedMessage);
+					// Notify about received message
+					OnMessageReceived(receivedMessage);
+
+					// Make sure we remember what we have received
+					AddPastMessageToCollection(m_receivedMessages, receivedMessage);
+				}
+				catch (OperationCanceledException e) //TODO: Migrate to this exception
+				{
+					// We are being canceled or operation timedout
+					Logger.Instance.Log(LogLevel.Info, "OperationCanceledException when receiving", e);
+				}
+				catch (CommunicationException e)
+				{
+					// We failed to receive
+					Logger.Instance.Log(LogLevel.Warning, "CommunicationException when receiving", e);
+				}
 			}
 		}
 
+		/// <summary>
+		/// Should we continue sending or stop the sender thread.
+		/// </summary>
+		private bool KeepSending(CancellationToken token)
+		{
+			Debug.Assert(token != null);
+			Debug.Assert(m_connection != null);
+
+			return !token.IsCancellationRequested && m_connection.SupportsSending();
+		}
+
+		/// <summary>
+		/// Should we continue receiving or stop the receiver thread.
+		/// </summary>
+		private bool KeepReceiving(CancellationToken token)
+		{
+			Debug.Assert(token != null);
+			Debug.Assert(m_connection != null);
+
+			return !token.IsCancellationRequested && m_connection.SupportsReceiving();
+		}
+
+		/// <summary>
+		/// Invokes all our subscribers for message received event.
+		/// </summary>
+		private void OnMessageReceived(Message message)
+		{
+			Debug.Assert(message != null);
+
+			EventHandler<MessageReceivedEventData> handler = MessageReceivedEvent;
+			if (handler != null)
+			{
+				var receptionEvent = new MessageReceivedEventData()
+				{
+					ReceivedMessage = message
+				};
+				handler(this, receptionEvent);
+			}
+		}
+
+		/// <summary>
+		/// Adds message to the given collection in a thread safe manner by locking collection.
+		/// </summary>
 		private void AddPastMessageToCollection(Queue<Message> collection, Message message)
 		{
+			Debug.Assert(collection != null);
+			Debug.Assert(message != null);
+
 			lock (collection)
 			{
 				if (collection.Count >= m_settings.PastMessagesToKeep.Get())
@@ -116,10 +243,16 @@ namespace Jamb.Communication
 			}
 		}
 
+		/// <summary>
+		/// Begins connection closing. Connection will be closed after all messages have been sent
+		/// or too much time passes (as specified in settings).
+		/// </summary>
 		public void Close()
 		{
+			Debug.Assert(m_connection != null);
+
 			// Inform threads we should communicate what we have and close up
-			m_connection.MarkAsClosing();
+			m_connection.BeginClosing();
 
 			// Make sure we try to terminate sender after specific time
 			m_sendThreadCanceler.CancelAfter(m_settings.SecondsToWaitClosingBeforeTerminating.Get() * 1000);
@@ -130,13 +263,18 @@ namespace Jamb.Communication
 			m_sendThread?.Join();
 			m_sendThread = null;
 
-			m_connection.MarkAsClosed();
+			m_connection.Terminate();
 		}
 
+		/// <summary>
+		/// Terminates the underlying connection. Messages for sending will not be sent.
+		/// </summary>
 		public void Terminate()
 		{
+			Debug.Assert(m_connection != null);
+
 			// Inform threads they should stop communicating
-			m_connection.MarkAsClosed();
+			m_connection.Terminate();
 
 			// Terminate threads
 			m_sendThreadCanceler.Cancel();
@@ -147,8 +285,13 @@ namespace Jamb.Communication
 			m_sendThread = null;
 		}
 
+		/// <summary>
+		/// Terminates underlying connection and disposes it.
+		/// </summary>
 		public void Dispose()
 		{
+			Debug.Assert(m_connection != null);
+
 			Terminate();
 			m_connection.Dispose();
 		}

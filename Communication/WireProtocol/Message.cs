@@ -6,7 +6,7 @@ using System.Runtime.Serialization;
 namespace Jamb.Communication.WireProtocol
 {
 	[DataContract]
-	internal abstract class Message
+	public abstract class Message
 	{
 		public static IEnumerable<Type> KnownTypes { get; private set; }
 		static Message()

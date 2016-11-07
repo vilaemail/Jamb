@@ -1,5 +1,5 @@
 ﻿using Jamb.Common;
-using Jamb.Communication;
+using Jamb.Communication.Network;
 using JambTests.Assertion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -11,7 +11,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace JambTests.Communication
+namespace JambTests.Communication.Network
 {
 	/// <summary>
 	/// Tests integration with .NET class NetworkStream. This covers testing WrappedNetworkStream, NetworkStreamFactory and NetworkHelper classes.

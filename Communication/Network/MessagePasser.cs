@@ -1,21 +1,20 @@
-﻿using System;
-using System.Threading.Tasks;
-using Jamb.Communication.WireProtocol;
-using System.Net.Sockets;
-using System.Threading;
-using System.Diagnostics;
-using System.Runtime.Serialization.Json;
-using System.IO;
-using System.Runtime.Serialization;
+﻿using Jamb.Communication.WireProtocol;
 using Jamb.Values;
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Net.Sockets;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
+using System.Threading;
 
-namespace Jamb.Communication
+namespace Jamb.Communication.Network
 {
 	/// <summary>
 	/// Able to send and receive messages synchronosuly with another instance of this class on another computer.
 	/// It is the owner of all resources that are used for this purpose.
 	/// </summary>
-	internal class MessagePasser : IDisposable
+	internal class MessagePasser : IMessagePasser
 	{
 		private const int c_headerSize = 5; // in B
 		private const byte c_protocolVersion = 1;

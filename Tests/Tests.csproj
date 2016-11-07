@@ -64,9 +64,9 @@
     <Compile Include="Common\UnitTestArgumentValidation.cs" />
     <Compile Include="Common\UnitTestExceptionHandling.cs" />
     <Compile Include="Common\UnitTestTaskHelper.cs" />
-    <Compile Include="Communication\IntegrationTestMessagePasser.cs" />
-    <Compile Include="Communication\IntegrationTestNetworkStream.cs" />
-    <Compile Include="Communication\UnitTestMessagePasser.cs" />
+    <Compile Include="Communication\Network\IntegrationTestMessagePasser.cs" />
+    <Compile Include="Communication\Network\IntegrationTestNetworkStream.cs" />
+    <Compile Include="Communication\Network\UnitTestMessagePasser.cs" />
     <Compile Include="Logging\IntegrationTestLoggerFactory.cs" />
     <Compile Include="Logging\IntegrationTestAsyncToFileLogConsumer.cs" />
     <Compile Include="Logging\UnitTestDefaultLogger.cs" />

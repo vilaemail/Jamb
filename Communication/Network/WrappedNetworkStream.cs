@@ -2,7 +2,7 @@
 using System.Net.Sockets;
 using System.Threading;
 
-namespace Jamb.Communication
+namespace Jamb.Communication.Network
 {
 	/// <summary>
 	/// Calls the underlying implementation of NetworkStream.

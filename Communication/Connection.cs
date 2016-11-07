@@ -7,12 +7,12 @@ namespace Jamb.Communication
 {
 	/// <summary>
 	/// Owns message passer and its state. Changes the state if it detects a change.
-	/// Connection can be reestablished with new MessagePasser through Reopen method by ConnectionManager.
+	/// Connection can be reestablished with new IMessagePasser through Reopen method by ConnectionManager.
 	/// </summary>
 	internal class Connection : IDisposable
 	{
 		private ConnectionState m_state = ConnectionState.Lost;
-		private MessagePasser m_messagePasser = null;
+		private IMessagePasser m_messagePasser = null;
 		private Mutex m_sendMutex = new Mutex(false);
 		private Mutex m_receiveMutex = new Mutex(false);
 		private ManualResetEventSlim m_sendConnectionReopenedEvent = new ManualResetEventSlim(false);
@@ -97,7 +97,7 @@ namespace Jamb.Communication
 		/// <summary>
 		/// Reopens a lost connection by disposing of current message passer and marking a connection as opened with a new one.
 		/// </summary>
-		internal void Reopen(MessagePasser messagePasser)
+		internal void Reopen(IMessagePasser messagePasser)
 		{
 			using (new Releaser(m_sendMutex))
 			using (new Releaser(m_receiveMutex))

@@ -1,22 +1,13 @@
 ﻿using Jamb.Common;
-using Jamb.Communication;
+using Jamb.Communication.Network;
 using Jamb.Communication.WireProtocol;
 using Jamb.Values;
-using JambTests.Assertion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Reflection;
-using System.Runtime.Serialization.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace JambTests.Communication
+namespace JambTests.Communication.Network
 {
 	/// <summary>
 	/// Tests that MessagePasser and underlying classes work as expected with.

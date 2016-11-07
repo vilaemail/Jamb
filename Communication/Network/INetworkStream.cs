@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace Jamb.Communication
+namespace Jamb.Communication.Network
 {
 	/// <summary>
 	/// Interface hiding NetworkStream of .NET. 

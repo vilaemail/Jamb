@@ -1,4 +1,5 @@
 ﻿using Jamb.Communication;
+using Jamb.Communication.Network;
 using Jamb.Communication.WireProtocol;
 using Jamb.Values;
 using JambTests.Assertion;
@@ -12,7 +13,7 @@ using System.Runtime.Serialization.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace JambTests.Communication
+namespace JambTests.Communication.Network
 {
 	[TestClass]
 	public class UnitTestMessagePasser

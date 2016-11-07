@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Jamb.Communication
+namespace Jamb.Communication.Network
 {
 	/// <summary>
 	/// Creates NetworkStreams by using TcpListener, Socket, NetworkStream and WrappedNetworkStream.

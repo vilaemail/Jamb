@@ -1,6 +1,7 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using Jamb.Common;
 using Jamb.Communication.WireProtocol;
+using System;
+using System.Diagnostics;
 using System.Threading;
 
 namespace Jamb.Communication
@@ -11,6 +12,8 @@ namespace Jamb.Communication
 	/// </summary>
 	internal class Connection : IDisposable
 	{
+		private readonly ITaskFactory m_taskFactory;
+
 		private ConnectionState m_state = ConnectionState.Lost;
 		private IMessagePasser m_messagePasser = null;
 		private Mutex m_sendMutex = new Mutex(false);
@@ -20,8 +23,11 @@ namespace Jamb.Communication
 
 		internal ConnectionState State => m_state;
 
-		internal Connection()
+		internal Connection(ITaskFactory taskFactory)
 		{
+			Debug.Assert(taskFactory != null);
+
+			m_taskFactory = taskFactory;
 		}
 
 		/// <summary>
@@ -83,7 +89,7 @@ namespace Jamb.Communication
 		private void ChangeStateToClosed()
 		{
 			m_state = ConnectionState.Closed;
-			Task.Factory.StartNew(() =>
+			m_taskFactory.StartNew(() =>
 			{
 				using (new Releaser(m_sendMutex))
 				using (new Releaser(m_receiveMutex))

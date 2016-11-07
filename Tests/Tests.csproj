@@ -67,6 +67,7 @@
     <Compile Include="Communication\Network\IntegrationTestMessagePasser.cs" />
     <Compile Include="Communication\Network\IntegrationTestNetworkStream.cs" />
     <Compile Include="Communication\Network\UnitTestMessagePasser.cs" />
+    <Compile Include="Communication\UnitTestConnection.cs" />
     <Compile Include="Logging\IntegrationTestLoggerFactory.cs" />
     <Compile Include="Logging\IntegrationTestAsyncToFileLogConsumer.cs" />
     <Compile Include="Logging\UnitTestDefaultLogger.cs" />

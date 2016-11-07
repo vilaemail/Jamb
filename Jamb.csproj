@@ -66,8 +66,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\ArgumentValidation.cs" />
+    <Compile Include="Common\SyncTaskFactory.cs" />
     <Compile Include="Common\ExceptionHandling.cs" />
+    <Compile Include="Common\DotNetTaskFactory.cs" />
     <Compile Include="Common\NetworkHelper.cs" />
+    <Compile Include="Common\ITaskFactory.cs" />
     <Compile Include="Common\TaskHelper.cs" />
     <Compile Include="Communication\Exceptions\CommunicationException.cs" />
     <Compile Include="Communication\Connection.cs" />
